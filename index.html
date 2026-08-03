@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cargo Loader 3D — โปรแกรมวางแผนจัดเรียงสินค้าเข้าตู้/ขึ้นรถ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#141B24; --panel:#1D2733; --panel2:#232F3E; --field:#16202B;
+  --line:#33455A55; --text:#E9EEF3; --muted:#93A5B8;
+  --accent:#FF7A2F; --accent-soft:#FF7A2F22; --ok:#3ECF8E; --warn:#FFC53D; --danger:#FF6161;
+  --radius:10px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{height:100%}
+body{
+  font-family:'Sarabun',system-ui,-apple-system,sans-serif;
+  background:var(--bg); color:var(--text); overflow:hidden;
+  display:flex; flex-direction:column;
+}
+h1,h2,h3,.btn,.stat-num{font-family:'Kanit','Sarabun',sans-serif}
+
+/* ===== Header ===== */
+header{
+  display:flex; align-items:center; gap:12px; padding:10px 18px;
+  background:var(--panel); border-bottom:1px solid var(--line); flex:0 0 auto;
+}
+.logo-img{
+  width:40px; height:40px; border-radius:50%; flex:0 0 auto;
+  border:2px solid var(--accent); object-fit:cover; background:#fff;
+}
+header h1{font-size:17px; font-weight:600; letter-spacing:.3px; line-height:1.15}
+header h1 span{color:var(--accent)}
+header .by{font-size:12px; color:var(--muted); font-family:'Sarabun'; font-weight:400}
+header .links{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+.link-btn{
+  display:inline-flex; align-items:center; gap:6px; text-decoration:none;
+  font-family:'Kanit'; font-size:13px; font-weight:500; letter-spacing:.3px;
+  padding:7px 13px; border-radius:8px; transition:filter .12s;
+}
+.link-btn:hover{filter:brightness(1.15)}
+.link-yt{background:#E23B3B; color:#fff}
+.link-fb{background:var(--panel2); color:var(--text); border:1px solid var(--line)}
+
+.channel-card{
+  margin-top:6px; padding:12px; border-radius:var(--radius);
+  background:var(--panel2); border:1px solid var(--line);
+  display:flex; gap:11px; align-items:center;
+}
+.channel-card img{width:52px; height:52px; border-radius:50%; border:2px solid var(--accent); background:#fff; flex:0 0 auto}
+.channel-card .cc-name{font-family:'Kanit'; font-weight:600; font-size:14.5px}
+.channel-card .cc-desc{font-size:11.5px; color:var(--muted); line-height:1.45; margin:2px 0 6px}
+.channel-card a{color:var(--accent); font-size:12.5px; text-decoration:none; margin-right:12px}
+.channel-card a:hover{text-decoration:underline}
+
+/* ===== Layout ===== */
+.app{flex:1; display:flex; min-height:0}
+aside{
+  width:360px; flex:0 0 auto; background:var(--panel); border-right:1px solid var(--line);
+  overflow-y:auto; padding:14px 14px 40px;
+}
+main{flex:1; display:flex; flex-direction:column; min-width:0}
+
+/* ===== Sidebar sections ===== */
+section{margin-bottom:18px}
+.sec-title{
+  font-family:'Kanit'; font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--accent); border-bottom:1px solid var(--line); padding-bottom:6px; margin-bottom:10px;
+  display:flex; align-items:center; gap:8px;
+}
+label{display:block; font-size:12.5px; color:var(--muted); margin:8px 0 3px}
+select,input[type=number],input[type=text]{
+  width:100%; background:var(--field); color:var(--text); border:1px solid var(--line);
+  border-radius:6px; padding:7px 9px; font-size:13.5px; font-family:'Sarabun';
+}
+select:focus,input:focus{outline:2px solid var(--accent); outline-offset:0; border-color:transparent}
+.row{display:flex; gap:8px}
+.row>div{flex:1}
+.dim-note{font-size:11.5px; color:var(--muted); margin-top:5px; line-height:1.45}
+.hidden{display:none !important}
+
+input[type=color]{
+  width:100%; height:34px; padding:2px; background:var(--field);
+  border:1px solid var(--line); border-radius:6px; cursor:pointer;
+}
+.chk{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--text); margin-top:9px; cursor:pointer}
+.chk input{width:15px; height:15px; accent-color:var(--accent)}
+
+/* ===== Buttons ===== */
+.btn{
+  border:none; border-radius:8px; padding:9px 16px; font-size:14px; font-weight:500;
+  cursor:pointer; transition:filter .12s, transform .05s; letter-spacing:.3px;
+}
+.btn:active{transform:translateY(1px)}
+.btn:hover{filter:brightness(1.12)}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.btn-accent{background:var(--accent); color:#1A1208}
+.btn-ghost{background:var(--panel2); color:var(--text); border:1px solid var(--line)}
+.btn-add{width:100%; margin-top:12px; background:var(--panel2); color:var(--accent); border:1px dashed var(--accent)}
+.btn-sm{padding:3px 8px; font-size:12px; border-radius:5px}
+
+/* ===== Item table ===== */
+.item-table{width:100%; border-collapse:collapse; font-size:12.5px}
+.item-table td{padding:6px 4px; border-bottom:1px solid var(--line); vertical-align:middle}
+.item-table .nm{font-weight:600; font-size:13px}
+.item-table .dm{color:var(--muted); font-size:11.5px; line-height:1.4}
+.dot{width:13px; height:13px; border-radius:3px; display:inline-block; flex:0 0 auto}
+.tag{
+  display:inline-block; font-size:10.5px; padding:1px 6px; border-radius:4px;
+  background:var(--panel2); color:var(--muted); margin-right:3px; margin-top:2px;
+}
+.del{background:none; border:none; color:var(--muted); cursor:pointer; font-size:15px; padding:2px 6px}
+.del:hover{color:var(--danger)}
+
+/* ===== Toolbar & viewport ===== */
+.toolbar{
+  display:flex; align-items:center; gap:10px; padding:10px 16px; flex-wrap:wrap;
+  background:var(--panel); border-bottom:1px solid var(--line); flex:0 0 auto;
+}
+.step-wrap{display:flex; align-items:center; gap:10px; margin-left:auto; min-width:260px; flex:1; max-width:420px}
+.step-wrap label{margin:0; white-space:nowrap; font-size:12.5px}
+input[type=range]{flex:1; accent-color:var(--accent)}
+#stepLabel{font-size:12.5px; color:var(--text); white-space:nowrap; min-width:88px; text-align:right}
+
+.viewport{flex:1; position:relative; min-height:0; background:radial-gradient(1200px 600px at 50% 20%, #1C2836 0%, #10161E 70%)}
+#c3d{position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; cursor:grab}
+#c3d:active{cursor:grabbing}
+
+/* ===== Stats strip ===== */
+.stats{
+  position:absolute; left:12px; right:12px; bottom:12px;
+  display:flex; gap:10px; flex-wrap:wrap; pointer-events:none;
+}
+.stat{
+  background:#141B24E8; border:1px solid var(--line); border-radius:var(--radius);
+  padding:8px 14px; min-width:150px; backdrop-filter:blur(4px);
+}
+.stat .lb{font-size:11px; color:var(--muted); letter-spacing:.6px}
+.stat .stat-num{font-size:19px; font-weight:600; line-height:1.25}
+.bar{height:5px; background:#31405A; border-radius:3px; margin-top:5px; overflow:hidden}
+.bar>i{display:block; height:100%; background:var(--ok); border-radius:3px; transition:width .4s}
+.bar>i.over{background:var(--danger)}
+.stat.warn-card{border-color:var(--warn); color:var(--warn); max-width:340px}
+.stat.warn-card .lb{color:var(--warn)}
+.stat.warn-card div:not(.lb){font-size:12.5px; line-height:1.45}
+
+.hint{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  color:var(--muted); font-size:15px; pointer-events:none; text-align:center; padding:20px;
+}
+
+/* ===== Scrollbar ===== */
+aside::-webkit-scrollbar{width:9px}
+aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
+
+@media (max-width:900px){
+  body{overflow:auto}
+  .app{flex-direction:column}
+  aside{width:100%; max-height:45vh}
+  .viewport{min-height:420px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <img class="logo-img" id="chLogo" alt="โลโก้ช่อง คุยกับไออี">
+  <div>
+    <h1>CARGO LOADER <span>3D</span></h1>
+    <div class="by">โดยช่อง <b>คุยกับไออี</b> · โปรแกรมวางแผนจัดเรียงสินค้าเข้าตู้ / ขึ้นรถบรรทุก</div>
+  </div>
+  <div class="links">
+    <a class="link-btn link-yt" href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener">▶ ติดตามช่อง คุยกับไออี</a>
+    <a class="link-btn link-fb" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener">✎ แบบสอบถามฟีดแบ็ค</a>
+  </div>
+</header>
+
+<div class="app">
+<!-- ================= SIDEBAR ================= -->
+<aside>
+
+  <section>
+    <div class="sec-title">1 · ตู้ / รถบรรทุก</div>
+    <label for="containerSel">เลือกประเภท</label>
+    <select id="containerSel"></select>
+    <div id="customContainer" class="hidden">
+      <div class="row">
+        <div><label>ยาวภายใน (มม.)</label><input type="number" id="ccL" value="6000" min="100"></div>
+        <div><label>กว้างภายใน (มม.)</label><input type="number" id="ccW" value="2200" min="100"></div>
+      </div>
+      <div class="row">
+        <div><label>สูงภายใน (มม.)</label><input type="number" id="ccH" value="2200" min="100"></div>
+        <div><label>น้ำหนักบรรทุก (กก.)</label><input type="number" id="ccP" value="8000" min="1"></div>
+      </div>
+    </div>
+    <div class="dim-note" id="containerInfo"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">2 · รายการสินค้า</div>
+    <table class="item-table"><tbody id="itemRows"></tbody></table>
+  </section>
+
+  <section>
+    <div class="sec-title">3 · เพิ่มสินค้า</div>
+    <label>เลือกจากคลังมาตรฐาน (ไม่บังคับ)</label>
+    <select id="boxPresetSel"></select>
+    <label>ชื่อสินค้า</label>
+    <input type="text" id="fName" placeholder="เช่น กล่องสินค้า A">
+    <div class="row">
+      <div>
+        <label>รูปทรง</label>
+        <select id="fShape">
+          <option value="box">กล่องสี่เหลี่ยม</option>
+          <option value="cylinder">ทรงกระบอก (ถัง/ม้วน)</option>
+        </select>
+      </div>
+      <div>
+        <label>สี</label>
+        <input type="color" id="fColor" value="#3D8BFF">
+      </div>
+    </div>
+    <div id="boxDims">
+      <div class="row">
+        <div><label>ยาว (มม.)</label><input type="number" id="fL" value="600" min="1"></div>
+        <div><label>กว้าง (มม.)</label><input type="number" id="fW" value="400" min="1"></div>
+        <div><label>สูง (มม.)</label><input type="number" id="fH" value="400" min="1"></div>
+      </div>
+    </div>
+    <div id="cylDims" class="hidden">
+      <div class="row">
+        <div><label>เส้นผ่านศูนย์กลาง (มม.)</label><input type="number" id="fDia" value="580" min="1"></div>
+        <div><label>สูง (มม.)</label><input type="number" id="fCH" value="900" min="1"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div><label>น้ำหนัก/ชิ้น (กก.)</label><input type="number" id="fWt" value="10" min="0" step="0.1"></div>
+      <div><label>จำนวน (ชิ้น)</label><input type="number" id="fQty" value="10" min="1"></div>
+    </div>
+    <label class="chk" id="rotWrap"><input type="checkbox" id="fRot" checked> อนุญาตให้หมุนแนวนอนได้ (สลับกว้าง–ยาว)</label>
+    <label class="chk"><input type="checkbox" id="fNoStack"> ห้ามวางสินค้าอื่นทับด้านบน</label>
+    <button class="btn btn-add" id="btnAdd">＋ เพิ่มเข้ารายการ</button>
+  </section>
+
+  <section>
+    <div class="channel-card">
+      <img id="chLogo2" alt="โลโก้ช่อง คุยกับไออี">
+      <div>
+        <div class="cc-name">คุยกับไออี — Talk with IE</div>
+        <div class="cc-desc">แจกฟรีเครื่องมือดิจิทัลสำหรับโรงงาน SME · ถ้าโปรแกรมนี้มีประโยชน์ ฝากติดตามช่องและส่งฟีดแบ็คให้ด้วยนะครับ</div>
+        <a href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener">▶ YouTube</a>
+        <a href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener">✎ ส่งฟีดแบ็ค</a>
+      </div>
+    </div>
+  </section>
+
+</aside>
+
+<!-- ================= MAIN ================= -->
+<main>
+  <div class="toolbar">
+    <button class="btn btn-accent" id="btnPack">▶ จัดเรียงสินค้า</button>
+    <button class="btn btn-ghost" id="btnPdf" disabled>⬇ ส่งออก PDF ทีละขั้นตอน</button>
+    <button class="btn btn-ghost" id="btnView">รีเซ็ตมุมมอง</button>
+    <div class="step-wrap">
+      <label for="stepSlider">ดูทีละชิ้น</label>
+      <input type="range" id="stepSlider" min="0" max="0" value="0" disabled>
+      <span id="stepLabel">– / –</span>
+    </div>
+  </div>
+
+  <div class="viewport">
+    <canvas id="c3d"></canvas>
+    <div class="hint" id="hint">กำลังโหลด…</div>
+    <div class="stats" id="stats" style="display:none">
+      <div class="stat">
+        <div class="lb">การใช้พื้นที่ (UTILIZATION)</div>
+        <div class="stat-num" id="stUtil">–</div>
+        <div class="bar"><i id="barUtil" style="width:0%"></i></div>
+      </div>
+      <div class="stat">
+        <div class="lb">น้ำหนักรวม / พิกัดบรรทุก</div>
+        <div class="stat-num" id="stWt">–</div>
+        <div class="bar"><i id="barWt" style="width:0%"></i></div>
+      </div>
+      <div class="stat">
+        <div class="lb">จำนวนที่วางได้</div>
+        <div class="stat-num" id="stCnt">–</div>
+      </div>
+      <div class="stat warn-card hidden" id="stWarn">
+        <div class="lb">⚠ วางไม่ได้</div>
+        <div id="stWarnTxt"></div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ============================================================
+   PURE-START : ข้อมูลมาตรฐาน + อัลกอริทึมจัดเรียง (ไม่พึ่ง DOM)
+   ============================================================ */
+var CONTAINER_PRESETS = [
+  {id:'20ft',  name:'ตู้คอนเทนเนอร์ 20 ฟุต',        L:5898,  W:2352, H:2393, payload:28200},
+  {id:'40ft',  name:'ตู้คอนเทนเนอร์ 40 ฟุต',        L:12032, W:2352, H:2393, payload:26700},
+  {id:'40hq',  name:'ตู้คอนเทนเนอร์ 40 ฟุต HQ',     L:12032, W:2352, H:2698, payload:26500},
+  {id:'reef20',name:'ตู้เย็น (Reefer) 20 ฟุต',      L:5449,  W:2290, H:2244, payload:27400},
+  {id:'pick4', name:'รถกระบะตู้ทึบ 4 ล้อ',           L:2400,  W:1700, H:1700, payload:1100},
+  {id:'tr6',   name:'รถบรรทุก 6 ล้อ ตู้ทึบ',         L:5500,  W:2200, H:2200, payload:5000},
+  {id:'tr10',  name:'รถบรรทุก 10 ล้อ ตู้ทึบ',        L:7200,  W:2300, H:2400, payload:15000},
+  {id:'trail', name:'รถเทรลเลอร์ตู้ 40 ฟุต',         L:12000, W:2300, H:2500, payload:25000},
+  {id:'custom',name:'— กำหนดขนาดเอง —',            L:0, W:0, H:0, payload:0}
+];
+
+var BOX_PRESETS = [
+  {name:'กล่องไปรษณีย์ ง (30×22×20 ซม.)', shape:'box', l:300, w:220, h:200, weight:3},
+  {name:'กล่องไปรษณีย์ จ (40×24×17 ซม.)', shape:'box', l:400, w:240, h:170, weight:4},
+  {name:'กล่อง Carton 60×40×40 ซม.',      shape:'box', l:600, w:400, h:400, weight:12},
+  {name:'กล่อง Carton 50×40×30 ซม.',      shape:'box', l:500, w:400, h:300, weight:8},
+  {name:'พาเลทพร้อมสินค้า 100×120×120 ซม.', shape:'box', l:1200, w:1000, h:1200, weight:350},
+  {name:'ถังพลาสติก 200 ลิตร (Ø58×90 ซม.)', shape:'cylinder', dia:580, h:900, weight:80}
+];
+
+var MAX_UNITS = 700;   /* กันเบราว์เซอร์ค้างเมื่อจำนวนชิ้นมากเกินไป */
+var EPS = 0.5;
+
+function _ovXZ(ax,az,adx,adz, b){          /* พื้นที่ทับซ้อนบนระนาบพื้น */
+  var ox = Math.min(ax+adx, b.x+b.dx) - Math.max(ax, b.x);
+  var oz = Math.min(az+adz, b.z+b.dz) - Math.max(az, b.z);
+  return (ox>EPS && oz>EPS) ? ox*oz : 0;
+}
+
+/* ทดลองวางที่จุด (cx,cz) ด้วยขนาด dx,dz,dy — แรงโน้มถ่วงหาความสูง y ให้เอง */
+function _tryPlace(cx, cz, dx, dz, dy, cont, placed){
+  if(cx+dx > cont.L+EPS || cz+dz > cont.W+EPS) return null;
+  var y = 0, i, p;
+  for(i=0;i<placed.length;i++){
+    p = placed[i];
+    if(_ovXZ(cx,cz,dx,dz,p) > 0){
+      var top = p.y + p.dy;
+      if(top > y) y = top;
+    }
+  }
+  if(y+dy > cont.H+EPS) return null;
+  if(y > EPS){                              /* ต้องมีฐานรองรับ ≥ 55% และฐานต้องไม่ติดธง "ห้ามวางทับ" */
+    var sup = 0;
+    for(i=0;i<placed.length;i++){
+      p = placed[i];
+      if(Math.abs(p.y+p.dy - y) < EPS){
+        var a = _ovXZ(cx,cz,dx,dz,p);
+        if(a > 0){
+          if(p.noStack) return null;
+          sup += a;
+        }
+      }
+    }
+    if(sup < 0.55*dx*dz) return null;
+  }
+  return {x:cx, y:y, z:cz, dx:dx, dz:dz, dy:dy};
+}
+
+/* อัลกอริทึม Deepest–Bottom–Left + gravity drop
+   items: [{name, shape:'box'|'cylinder', l,w,h | dia,h, weight, qty, color, rotatable, noStack}]
+   container: {L,W,H,payload}                                              */
+function packCargo(container, items){
+  var units = [], truncated = false;
+  items.forEach(function(it, idx){
+    var dims = (it.shape==='cylinder')
+      ? {dx:it.dia, dz:it.dia, dy:it.h}
+      : {dx:it.l,  dz:it.w,  dy:it.h};
+    for(var q=0; q<it.qty; q++){
+      if(units.length >= MAX_UNITS){ truncated = true; return; }
+      units.push({
+        idx:idx, shape:it.shape, weight:it.weight||0,
+        dx:dims.dx, dz:dims.dz, dy:dims.dy,
+        rotatable:(it.shape==='box' && !!it.rotatable),
+        noStack:!!it.noStack
+      });
+    }
+  });
+
+  /* ของหนักลงก่อน (อยู่ล่าง/ในสุด) → ปริมาตรใหญ่ก่อน */
+  units.sort(function(a,b){
+    return (b.weight-a.weight) || (b.dx*b.dy*b.dz - a.dx*a.dy*a.dz) || (a.idx-b.idx);
+  });
+
+  var placed = [], unplaced = {};
+  var cands = [{x:0, z:0}];
+  var candSet = {'0_0':1};
+
+  units.forEach(function(u){
+    var best = null;
+    for(var c=0; c<cands.length; c++){
+      var cd = cands[c];
+      var rots = u.rotatable && Math.abs(u.dx-u.dz)>EPS
+        ? [[u.dx,u.dz],[u.dz,u.dx]] : [[u.dx,u.dz]];
+      for(var r=0; r<rots.length; r++){
+        var pos = _tryPlace(cd.x, cd.z, rots[r][0], rots[r][1], u.dy, container, placed);
+        if(pos && (!best ||
+            pos.x < best.x-EPS ||
+            (Math.abs(pos.x-best.x)<EPS && pos.y < best.y-EPS) ||
+            (Math.abs(pos.x-best.x)<EPS && Math.abs(pos.y-best.y)<EPS && pos.z < best.z-EPS))){
+          best = pos;
+        }
+      }
+    }
+    if(best){
+      best.idx = u.idx; best.shape = u.shape; best.weight = u.weight;
+      best.noStack = u.noStack; best.order = placed.length;
+      placed.push(best);
+      [[best.x+best.dx, best.z], [best.x, best.z+best.dz]].forEach(function(nc){
+        if(nc[0] < container.L-EPS && nc[1] < container.W-EPS){
+          var k = Math.round(nc[0])+'_'+Math.round(nc[1]);
+          if(!candSet[k]){ candSet[k]=1; cands.push({x:nc[0], z:nc[1]}); }
+        }
+      });
+    }else{
+      unplaced[u.idx] = (unplaced[u.idx]||0) + 1;
+    }
+  });
+
+  /* สรุปสถิติ — ปริมาตรจริงของทรงกระบอกใช้ πr²h */
+  var vol = 0, wt = 0;
+  placed.forEach(function(p){
+    vol += (p.shape==='cylinder') ? Math.PI/4*p.dx*p.dx*p.dy : p.dx*p.dy*p.dz;
+    wt  += p.weight;
+  });
+  var cvol = container.L*container.W*container.H;
+
+  /* แบ่งขั้นตอนโหลด: ชนิดเดียวกันติดกัน = ขั้นเดียว (สูงสุด 16 ชิ้น/ขั้น) */
+  var steps = [];
+  placed.forEach(function(p, i){
+    var last = steps[steps.length-1];
+    if(!last || last.idx !== p.idx || (i - last.from) >= 16){
+      steps.push({idx:p.idx, from:i, to:i+1});
+    }else last.to = i+1;
+  });
+
+  return {
+    placed:placed, steps:steps, unplaced:unplaced, truncated:truncated,
+    totalWeight:wt, utilization: cvol>0 ? vol/cvol : 0,
+    totalUnits:units.length
+  };
+}
+/* PURE-END */
+
+/* ============================================================
+   โลโก้ช่อง คุยกับไออี (ฝังในไฟล์ ไม่ต้องพึ่งอินเทอร์เน็ต)
+   ============================================================ */
+var CH_LOGO = 'data:image/jpeg;base64,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';
+var chLogoImg = new Image();
+chLogoImg.src = CH_LOGO;
+
+/* ============================================================
+   ข้อมูลตัวอย่าง (Mock) — งานส่งของโรงงานพลาสติก ด้วยรถ 6 ล้อ
+   ============================================================ */
+var items = [
+  {name:'ถังเม็ดพลาสติก 200 ลิตร', shape:'cylinder', dia:580, h:900,  weight:80, qty:8,  color:'#FFC53D', rotatable:false, noStack:true},
+  {name:'กล่อง A ชิ้นงานฉีดสำเร็จ', shape:'box', l:600, w:400, h:400, weight:12, qty:40, color:'#3D8BFF', rotatable:true,  noStack:false},
+  {name:'กล่อง B อะไหล่แม่พิมพ์',   shape:'box', l:500, w:400, h:300, weight:15, qty:48, color:'#FF7A2F', rotatable:true,  noStack:false},
+  {name:'กล่อง C ฟิล์มแพ็คเกจจิ้ง', shape:'box', l:400, w:300, h:300, weight:6,  qty:60, color:'#3ECF8E', rotatable:true,  noStack:false},
+  {name:'กล่อง D สินค้าน้ำหนักเบา', shape:'box', l:450, w:450, h:350, weight:4,  qty:36, color:'#A06BFF', rotatable:true,  noStack:false}
+];
+var selectedContainerId = 'tr6';
+var lastResult = null;
+
+/* ============================================================
+   UI : ตู้ / รายการสินค้า / ฟอร์ม
+   ============================================================ */
+var $ = function(id){ return document.getElementById(id); };
+
+function getContainer(){
+  var p = CONTAINER_PRESETS.find(function(c){ return c.id===selectedContainerId; });
+  if(p.id==='custom'){
+    return {name:'กำหนดเอง', L:+$('ccL').value||1, W:+$('ccW').value||1,
+            H:+$('ccH').value||1, payload:+$('ccP').value||1};
+  }
+  return {name:p.name, L:p.L, W:p.W, H:p.H, payload:p.payload};
+}
+
+function refreshContainerInfo(){
+  var c = getContainer();
+  $('containerInfo').textContent =
+    'ขนาดภายใน '+c.L+' × '+c.W+' × '+c.H+' มม. · ปริมาตร '
+    +(c.L*c.W*c.H/1e9).toFixed(1)+' ลบ.ม. · บรรทุกได้ '+c.payload.toLocaleString()+' กก.';
+}
+
+function initContainerSel(){
+  var sel = $('containerSel');
+  CONTAINER_PRESETS.forEach(function(c){
+    var o = document.createElement('option');
+    o.value = c.id; o.textContent = c.name;
+    sel.appendChild(o);
+  });
+  sel.value = selectedContainerId;
+  sel.onchange = function(){
+    selectedContainerId = sel.value;
+    $('customContainer').classList.toggle('hidden', sel.value!=='custom');
+    refreshContainerInfo();
+  };
+  ['ccL','ccW','ccH','ccP'].forEach(function(id){ $(id).oninput = refreshContainerInfo; });
+  refreshContainerInfo();
+}
+
+function initBoxPresetSel(){
+  var sel = $('boxPresetSel');
+  var o0 = document.createElement('option');
+  o0.value = ''; o0.textContent = '— กรอกเองด้านล่าง —';
+  sel.appendChild(o0);
+  BOX_PRESETS.forEach(function(b, i){
+    var o = document.createElement('option');
+    o.value = i; o.textContent = b.name;
+    sel.appendChild(o);
+  });
+  sel.onchange = function(){
+    if(sel.value==='') return;
+    var b = BOX_PRESETS[+sel.value];
+    $('fName').value = b.name;
+    $('fShape').value = b.shape;
+    $('fShape').onchange();
+    if(b.shape==='box'){ $('fL').value=b.l; $('fW').value=b.w; $('fH').value=b.h; }
+    else{ $('fDia').value=b.dia; $('fCH').value=b.h; }
+    $('fWt').value = b.weight;
+  };
+}
+
+function renderItemRows(){
+  var tb = $('itemRows');
+  tb.innerHTML = '';
+  if(items.length===0){
+    tb.innerHTML = '<tr><td class="dm" style="padding:12px 4px">ยังไม่มีสินค้า — เพิ่มจากฟอร์มด้านล่าง</td></tr>';
+    return;
+  }
+  items.forEach(function(it, i){
+    var tr = document.createElement('tr');
+    var dims = it.shape==='cylinder'
+      ? 'ทรงกระบอก Ø'+it.dia+' × '+it.h+' มม.'
+      : it.l+' × '+it.w+' × '+it.h+' มม.';
+    var tags = '';
+    if(it.noStack) tags += '<span class="tag">ห้ามวางทับ</span>';
+    if(it.shape==='box' && it.rotatable) tags += '<span class="tag">หมุนได้</span>';
+    tr.innerHTML =
+      '<td style="width:20px"><span class="dot" style="background:'+it.color+'"></span></td>' +
+      '<td><div class="nm">'+it.name+'</div><div class="dm">'+dims+' · '+it.weight+' กก./ชิ้น</div><div>'+tags+'</div></td>' +
+      '<td style="text-align:right; white-space:nowrap"><b>'+it.qty+'</b> ชิ้น</td>' +
+      '<td style="width:28px"><button class="del" title="ลบ" data-i="'+i+'">✕</button></td>';
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('.del').forEach(function(b){
+    b.onclick = function(){ items.splice(+b.dataset.i, 1); renderItemRows(); };
+  });
+}
+
+var COLOR_CYCLE = ['#3D8BFF','#FF7A2F','#3ECF8E','#FFC53D','#A06BFF','#FF6191','#4FD8E0','#B5CC3B'];
+function initForm(){
+  $('fShape').onchange = function(){
+    var cyl = $('fShape').value==='cylinder';
+    $('boxDims').classList.toggle('hidden', cyl);
+    $('cylDims').classList.toggle('hidden', !cyl);
+    $('rotWrap').classList.toggle('hidden', cyl);
+  };
+  $('btnAdd').onclick = function(){
+    var shape = $('fShape').value;
+    var name = $('fName').value.trim() || ('สินค้า '+(items.length+1));
+    var it = {
+      name:name, shape:shape, color:$('fColor').value,
+      weight:Math.max(0, +$('fWt').value||0),
+      qty:Math.max(1, Math.round(+$('fQty').value||1)),
+      rotatable:$('fRot').checked, noStack:$('fNoStack').checked
+    };
+    if(shape==='cylinder'){
+      it.dia = Math.max(1, +$('fDia').value||1);
+      it.h   = Math.max(1, +$('fCH').value||1);
+    }else{
+      it.l = Math.max(1, +$('fL').value||1);
+      it.w = Math.max(1, +$('fW').value||1);
+      it.h = Math.max(1, +$('fH').value||1);
+    }
+    items.push(it);
+    renderItemRows();
+    $('fName').value = '';
+    $('boxPresetSel').value = '';
+    $('fColor').value = COLOR_CYCLE[items.length % COLOR_CYCLE.length];
+  };
+}
+
+/* ============================================================
+   Three.js : ฉาก 3 มิติ
+   ============================================================ */
+var scene, camera, renderer, meshes = [], containerGroup = null, cargoGroup = null;
+var orbit = {theta:-0.9, phi:1.05, dist:10, target:new THREE.Vector3()};
+var S = 0.001; /* มม. → เมตร */
+
+function initThree(){
+  var canvas = $('c3d');
+  renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:true, preserveDrawingBuffer:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(45, 1, 0.05, 500);
+
+  scene.add(new THREE.HemisphereLight(0xEAF2FF, 0x30281E, 0.95));
+  var dir = new THREE.DirectionalLight(0xFFFFFF, 0.75);
+  dir.position.set(6, 10, 4);
+  scene.add(dir);
+  var dir2 = new THREE.DirectionalLight(0xFFD9B0, 0.25);
+  dir2.position.set(-5, 4, -6);
+  scene.add(dir2);
+
+  bindOrbit(canvas);
+  window.addEventListener('resize', resize3d);
+  resize3d();
+  (function loop(){ requestAnimationFrame(loop); applyOrbit(); renderer.render(scene, camera); })();
+}
+
+function resize3d(){
+  var canvas = $('c3d');
+  var w = canvas.clientWidth || canvas.parentElement.clientWidth;
+  var h = canvas.clientHeight || canvas.parentElement.clientHeight;
+  if(w===0 || h===0) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+
+function applyOrbit(){
+  orbit.phi = Math.max(0.12, Math.min(Math.PI/2-0.02, orbit.phi));
+  var sp = Math.sin(orbit.phi), cp = Math.cos(orbit.phi);
+  camera.position.set(
+    orbit.target.x + orbit.dist*sp*Math.cos(orbit.theta),
+    orbit.target.y + orbit.dist*cp,
+    orbit.target.z + orbit.dist*sp*Math.sin(orbit.theta)
+  );
+  camera.lookAt(orbit.target);
+}
+
+function bindOrbit(el){
+  var drag = false, px = 0, py = 0, pinch = 0;
+  el.addEventListener('mousedown', function(e){ drag=true; px=e.clientX; py=e.clientY; });
+  window.addEventListener('mouseup', function(){ drag=false; });
+  window.addEventListener('mousemove', function(e){
+    if(!drag) return;
+    orbit.theta += (e.clientX-px)*0.006;
+    orbit.phi   -= (e.clientY-py)*0.006;
+    px=e.clientX; py=e.clientY;
+  });
+  el.addEventListener('wheel', function(e){
+    e.preventDefault();
+    orbit.dist = Math.max(1.5, Math.min(80, orbit.dist * (e.deltaY>0 ? 1.1 : 0.9)));
+  }, {passive:false});
+  el.addEventListener('touchstart', function(e){
+    if(e.touches.length===1){ drag=true; px=e.touches[0].clientX; py=e.touches[0].clientY; }
+    else if(e.touches.length===2){
+      pinch = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    }
+  }, {passive:true});
+  el.addEventListener('touchmove', function(e){
+    if(e.touches.length===1 && drag){
+      orbit.theta += (e.touches[0].clientX-px)*0.007;
+      orbit.phi   -= (e.touches[0].clientY-py)*0.007;
+      px=e.touches[0].clientX; py=e.touches[0].clientY;
+    }else if(e.touches.length===2){
+      var d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+      if(pinch>0) orbit.dist = Math.max(1.5, Math.min(80, orbit.dist * pinch/d));
+      pinch = d;
+    }
+    e.preventDefault();
+  }, {passive:false});
+  el.addEventListener('touchend', function(){ drag=false; pinch=0; });
+}
+
+function makeLabelSprite(text){
+  var cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 128;
+  var ctx = cv.getContext('2d');
+  ctx.font = '600 52px Kanit, Sarabun, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#FF7A2F';
+  ctx.fillText(text, 256, 64);
+  var tex = new THREE.CanvasTexture(cv);
+  var sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false}));
+  sp.scale.set(1.6, 0.4, 1);
+  return sp;
+}
+
+function buildContainerMesh(c){
+  if(containerGroup) scene.remove(containerGroup);
+  containerGroup = new THREE.Group();
+  var L=c.L*S, W=c.W*S, H=c.H*S;
+
+  var edges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(L, H, W)),
+    new THREE.LineBasicMaterial({color:0xFF7A2F})
+  );
+  edges.position.set(L/2, H/2, W/2);
+  containerGroup.add(edges);
+
+  var floor = new THREE.Mesh(
+    new THREE.BoxGeometry(L, 0.02, W),
+    new THREE.MeshLambertMaterial({color:0x2A3648})
+  );
+  floor.position.set(L/2, -0.011, W/2);
+  containerGroup.add(floor);
+
+  /* ผนังหัวตู้ (x=0) โปร่งบาง เพื่อบอกทิศทาง */
+  var wall = new THREE.Mesh(
+    new THREE.PlaneGeometry(W, H),
+    new THREE.MeshBasicMaterial({color:0xFF7A2F, transparent:true, opacity:0.07, side:THREE.DoubleSide})
+  );
+  wall.rotation.y = Math.PI/2;
+  wall.position.set(0.001, H/2, W/2);
+  containerGroup.add(wall);
+
+  var lb = makeLabelSprite('◀ ประตู / ท้ายรถ');
+  lb.position.set(L+0.35, H*0.55, W/2);
+  containerGroup.add(lb);
+
+  scene.add(containerGroup);
+  orbit.target.set(L/2, H/2.6, W/2);
+  orbit.dist = Math.max(L, W, H)*1.9 + 1.2;
+  orbit.theta = -0.85; orbit.phi = 1.02;
+}
+
+function buildCargoMeshes(result){
+  if(cargoGroup) scene.remove(cargoGroup);
+  cargoGroup = new THREE.Group();
+  meshes = [];
+  result.placed.forEach(function(p){
+    var col = new THREE.Color(items[p.idx] ? items[p.idx].color : '#888888');
+    var geo = (p.shape==='cylinder')
+      ? new THREE.CylinderGeometry(p.dx*S/2*0.98, p.dx*S/2*0.98, p.dy*S*0.985, 24)
+      : new THREE.BoxGeometry(p.dx*S*0.985, p.dy*S*0.985, p.dz*S*0.985);
+    var mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:col}));
+    mesh.position.set((p.x+p.dx/2)*S, (p.y+p.dy/2)*S, (p.z+p.dz/2)*S);
+    var eg = new THREE.LineSegments(
+      new THREE.EdgesGeometry(geo),
+      new THREE.LineBasicMaterial({color:0x10161E, transparent:true, opacity:0.55})
+    );
+    mesh.add(eg);
+    mesh.userData.edge = eg;
+    cargoGroup.add(mesh);
+    meshes.push(mesh);
+  });
+  scene.add(cargoGroup);
+}
+
+function setVisibleCount(n){
+  meshes.forEach(function(m, i){ m.visible = i < n; });
+}
+
+function setDimRange(from, to){ /* ชิ้นก่อนหน้า from = จาง, [from,to) = เต็มสี, ตั้งแต่ to = ซ่อน */
+  meshes.forEach(function(m, i){
+    m.visible = i < to;
+    var dim = i < from;
+    m.material.transparent = dim;
+    m.material.opacity = dim ? 0.22 : 1;
+    m.userData.edge.material.opacity = dim ? 0.1 : 0.55;
+  });
+}
+
+function clearDim(){
+  meshes.forEach(function(m){
+    m.material.transparent = false;
+    m.material.opacity = 1;
+    m.userData.edge.material.opacity = 0.55;
+  });
+}
+
+/* ============================================================
+   จัดเรียง + อัปเดตสถิติ
+   ============================================================ */
+function runPack(){
+  if(items.length===0){ alert('กรุณาเพิ่มสินค้าอย่างน้อย 1 รายการ'); return; }
+  var c = getContainer();
+  var btn = $('btnPack');
+  btn.disabled = true; btn.textContent = 'กำลังคำนวณ…';
+  setTimeout(function(){
+    lastResult = packCargo(c, items);
+    buildContainerMesh(c);
+    buildCargoMeshes(lastResult);
+    updateStats(c, lastResult);
+
+    var sl = $('stepSlider');
+    sl.max = lastResult.placed.length;
+    sl.value = lastResult.placed.length;
+    sl.disabled = lastResult.placed.length===0;
+    updateStepLabel();
+
+    $('hint').style.display = 'none';
+    $('stats').style.display = 'flex';
+    $('btnPdf').disabled = lastResult.placed.length===0;
+    btn.disabled = false; btn.textContent = '▶ จัดเรียงสินค้า';
+  }, 30);
+}
+
+function updateStats(c, r){
+  var pct = Math.round(r.utilization*1000)/10;
+  $('stUtil').textContent = pct + ' %';
+  $('barUtil').style.width = Math.min(100, pct) + '%';
+
+  var wPct = c.payload>0 ? r.totalWeight/c.payload*100 : 0;
+  $('stWt').textContent = Math.round(r.totalWeight).toLocaleString() + ' / ' + c.payload.toLocaleString() + ' กก.';
+  var bw = $('barWt');
+  bw.style.width = Math.min(100, wPct) + '%';
+  bw.className = wPct>100 ? 'over' : '';
+
+  $('stCnt').textContent = r.placed.length + ' / ' + r.totalUnits + ' ชิ้น';
+
+  var un = Object.keys(r.unplaced);
+  var warn = [];
+  if(un.length){
+    warn.push(un.map(function(k){ return (items[k]?items[k].name:'?')+' '+r.unplaced[k]+' ชิ้น'; }).join(', ') + ' — พื้นที่ไม่พอหรือขนาดเกินตู้');
+  }
+  if(wPct>100) warn.push('น้ำหนักเกินพิกัดบรรทุก!');
+  if(r.truncated) warn.push('จำนวนชิ้นเกิน '+MAX_UNITS+' — คำนวณเฉพาะ '+MAX_UNITS+' ชิ้นแรก');
+  $('stWarn').classList.toggle('hidden', warn.length===0);
+  $('stWarnTxt').innerHTML = warn.join('<br>');
+}
+
+function updateStepLabel(){
+  var sl = $('stepSlider');
+  $('stepLabel').textContent = sl.value + ' / ' + sl.max + ' ชิ้น';
+  setVisibleCount(+sl.value);
+}
+
+/* ============================================================
+   ส่งออก PDF ทีละขั้นตอน (วาดหน้าเอกสารด้วย canvas 2D เพื่อรองรับภาษาไทย)
+   ============================================================ */
+var PW = 1754, PH = 1240; /* A4 แนวนอน ~150dpi */
+
+function captureShot(w, h, camSetup){
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+  camSetup();
+  renderer.render(scene, camera);
+  return renderer.domElement.toDataURL('image/jpeg', 0.92);
+}
+
+function loadImg(src){
+  return new Promise(function(res){
+    var im = new Image();
+    im.onload = function(){ res(im); };
+    im.src = src;
+  });
+}
+
+function pageCanvas(){
+  var cv = document.createElement('canvas');
+  cv.width = PW; cv.height = PH;
+  var ctx = cv.getContext('2d');
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, PW, PH);
+  return {cv:cv, ctx:ctx};
+}
+
+function pageHeader(ctx, title, sub, pageNo, pageTotal){
+  ctx.fillStyle = '#1D2733';
+  ctx.fillRect(0, 0, PW, 96);
+  ctx.fillStyle = '#FF7A2F';
+  ctx.fillRect(0, 96, PW, 6);
+  var tx = 46;
+  if(chLogoImg.complete && chLogoImg.naturalWidth > 0){
+    ctx.save();
+    ctx.beginPath(); ctx.arc(78, 48, 32, 0, Math.PI*2); ctx.clip();
+    ctx.drawImage(chLogoImg, 46, 16, 64, 64);
+    ctx.restore();
+    ctx.strokeStyle = '#FF7A2F'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(78, 48, 32, 0, Math.PI*2); ctx.stroke();
+    tx = 130;
+  }
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '600 40px Kanit, Sarabun, sans-serif';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(title, tx, 48);
+  ctx.fillStyle = '#FFB27A';
+  ctx.font = '400 24px Sarabun, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(sub, PW-46, 48);
+  ctx.fillStyle = '#8A97A5';
+  ctx.font = '400 20px Sarabun, sans-serif';
+  ctx.fillText('หน้า '+pageNo+' / '+pageTotal, PW-46, PH-30);
+  ctx.textAlign = 'left';
+  ctx.fillText('จัดทำด้วยโปรแกรม Cargo Loader 3D · ช่อง คุยกับไออี — youtube.com/@_talkwithie.5264', 46, PH-30);
+}
+
+async function exportPDF(){
+  if(!lastResult || lastResult.placed.length===0) return;
+  var btn = $('btnPdf');
+  btn.disabled = true; btn.textContent = 'กำลังสร้าง PDF…';
+  var c = getContainer();
+  var r = lastResult;
+
+  /* เก็บสถานะเดิมไว้ก่อน */
+  var oldW = renderer.domElement.width / renderer.getPixelRatio();
+  var oldH = renderer.domElement.height / renderer.getPixelRatio();
+  var oldOrbit = {theta:orbit.theta, phi:orbit.phi, dist:orbit.dist};
+  renderer.setPixelRatio(1);
+
+  var L=c.L*S, W=c.W*S, H=c.H*S;
+  var center = new THREE.Vector3(L/2, H/2.8, W/2);
+  var isoCam = function(){
+    var d = Math.max(L, W, H)*1.85 + 1.1;
+    camera.up.set(0,1,0);
+    camera.position.set(center.x + d*0.72, center.y + d*0.62, center.z + d*0.72);
+    camera.lookAt(center);
+  };
+  var topCam = function(){
+    camera.up.set(-1,0,0);
+    camera.position.set(L/2, Math.max(L,W)*1.15 + H, W/2);
+    camera.lookAt(new THREE.Vector3(L/2, 0, W/2));
+  };
+
+  try{
+    var jsPDF = window.jspdf.jsPDF;
+    var pdf = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+    var pageTotal = r.steps.length + 1;
+    var dateStr = new Date().toLocaleDateString('th-TH', {year:'numeric', month:'long', day:'numeric'});
+
+    /* ---------- หน้า 1 : สรุปแผน ---------- */
+    setDimRange(r.placed.length, r.placed.length);   /* แสดงทุกชิ้นเต็มสี */
+    var finalIso = await loadImg(captureShot(1250, 900, isoCam));
+    var pg = pageCanvas();
+    pageHeader(pg.ctx, 'แผนการจัดเรียงสินค้า (Loading Plan)', dateStr, 1, pageTotal);
+    var ctx = pg.ctx;
+
+    ctx.fillStyle = '#1D2733';
+    ctx.font = '600 30px Kanit, Sarabun, sans-serif';
+    ctx.fillText(c.name, 46, 156);
+    ctx.font = '400 23px Sarabun, sans-serif';
+    ctx.fillStyle = '#44515F';
+    ctx.fillText('ขนาดภายใน '+c.L+' × '+c.W+' × '+c.H+' มม. · พิกัดบรรทุก '+c.payload.toLocaleString()+' กก.', 46, 194);
+
+    /* ตารางรายการ */
+    var ty = 250;
+    ctx.font = '600 22px Kanit, Sarabun, sans-serif';
+    ctx.fillStyle = '#8A5A2B';
+    ctx.fillText('รายการสินค้า', 46, ty-14);
+    ctx.font = '600 20px Sarabun, sans-serif';
+    ctx.fillStyle = '#44515F';
+    ctx.fillText('ขนาด (มม.)', 420, ty-14);
+    ctx.fillText('สั่ง', 640, ty-14);
+    ctx.fillText('วางได้', 710, ty-14);
+    ctx.fillText('นน.รวม (กก.)', 800, ty-14);
+    ctx.strokeStyle = '#D8DEE5';
+    ctx.beginPath(); ctx.moveTo(46, ty); ctx.lineTo(950, ty); ctx.stroke();
+
+    items.forEach(function(it, i){
+      ty += 42;
+      var placedN = r.placed.filter(function(p){ return p.idx===i; }).length;
+      ctx.fillStyle = it.color;
+      ctx.fillRect(46, ty-20, 22, 22);
+      ctx.fillStyle = '#1D2733';
+      ctx.font = '400 21px Sarabun, sans-serif';
+      ctx.fillText(it.name.slice(0, 24), 80, ty-4);
+      ctx.fillStyle = '#44515F';
+      var dm = it.shape==='cylinder' ? 'Ø'+it.dia+' × '+it.h : it.l+'×'+it.w+'×'+it.h;
+      ctx.fillText(dm, 420, ty-4);
+      ctx.fillText(String(it.qty), 640, ty-4);
+      ctx.fillStyle = placedN < it.qty ? '#C43D3D' : '#1D2733';
+      ctx.fillText(String(placedN), 710, ty-4);
+      ctx.fillStyle = '#44515F';
+      ctx.fillText((placedN*it.weight).toLocaleString(), 800, ty-4);
+    });
+
+    /* กล่องสรุปตัวเลข */
+    ty += 60;
+    var statY = ty;
+    [['การใช้พื้นที่', (Math.round(r.utilization*1000)/10)+' %'],
+     ['น้ำหนักรวม', Math.round(r.totalWeight).toLocaleString()+' กก.'],
+     ['จำนวนที่วางได้', r.placed.length+' / '+r.totalUnits+' ชิ้น'],
+     ['จำนวนขั้นตอน', r.steps.length+' ขั้น']].forEach(function(sIt, i){
+      var bx = 46 + i*232;
+      ctx.fillStyle = '#F2F4F7';
+      ctx.fillRect(bx, statY, 216, 96);
+      ctx.fillStyle = '#8A97A5';
+      ctx.font = '400 18px Sarabun, sans-serif';
+      ctx.fillText(sIt[0], bx+16, statY+32);
+      ctx.fillStyle = '#1D2733';
+      ctx.font = '600 32px Kanit, Sarabun, sans-serif';
+      ctx.fillText(sIt[1], bx+16, statY+72);
+    });
+
+    ctx.drawImage(finalIso, 990, 130, 720, 519);
+    ctx.fillStyle = '#8A97A5';
+    ctx.font = '400 19px Sarabun, sans-serif';
+    ctx.fillText('ภาพรวมเมื่อจัดเรียงครบทุกชิ้น (มุมมองจากฝั่งประตู)', 990, 675);
+
+    pdf.addImage(pg.cv.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 297, 210);
+
+    /* ---------- หน้าขั้นตอน ---------- */
+    var cumW = 0;
+    for(var s=0; s<r.steps.length; s++){
+      var st = r.steps[s];
+      var it = items[st.idx];
+      var n = st.to - st.from;
+      for(var k=st.from; k<st.to; k++) cumW += r.placed[k].weight;
+
+      setDimRange(st.from, st.to);
+      var iso = await loadImg(captureShot(1250, 880, isoCam));
+      var top = await loadImg(captureShot(760, 560, topCam));
+
+      pg = pageCanvas(); ctx = pg.ctx;
+      pageHeader(ctx, 'ขั้นตอนที่ '+(s+1)+' จาก '+r.steps.length, c.name, s+2, pageTotal);
+
+      /* ภาพหลัก */
+      ctx.drawImage(iso, 40, 130, 1090, 767);
+      ctx.strokeStyle = '#D8DEE5';
+      ctx.strokeRect(40, 130, 1090, 767);
+
+      /* คอลัมน์ขวา */
+      var rx = 1170;
+      ctx.fillStyle = it.color;
+      ctx.fillRect(rx, 140, 30, 30);
+      ctx.fillStyle = '#1D2733';
+      ctx.font = '600 30px Kanit, Sarabun, sans-serif';
+      ctx.fillText('วาง: '+it.name.slice(0, 18), rx+44, 164);
+      ctx.font = '400 24px Sarabun, sans-serif';
+      ctx.fillStyle = '#44515F';
+      var dm2 = it.shape==='cylinder' ? 'ทรงกระบอก Ø'+it.dia+' × '+it.h+' มม.' : 'ขนาด '+it.l+' × '+it.w+' × '+it.h+' มม.';
+      ctx.fillText(dm2, rx, 214);
+      ctx.fillStyle = '#B34700';
+      ctx.font = '600 46px Kanit, Sarabun, sans-serif';
+      ctx.fillText('จำนวน '+n+' ชิ้น', rx, 280);
+      ctx.fillStyle = '#44515F';
+      ctx.font = '400 23px Sarabun, sans-serif';
+      ctx.fillText('วางแล้วสะสม: '+st.to+' / '+r.placed.length+' ชิ้น', rx, 330);
+      ctx.fillText('น้ำหนักสะสม: '+Math.round(cumW).toLocaleString()+' กก.', rx, 366);
+      if(it.noStack){
+        ctx.fillStyle = '#C43D3D';
+        ctx.fillText('⚠ ห้ามวางสินค้าอื่นทับด้านบน', rx, 406);
+      }
+
+      ctx.drawImage(top, rx, 460, 540, 398);
+      ctx.strokeStyle = '#D8DEE5';
+      ctx.strokeRect(rx, 460, 540, 398);
+      ctx.fillStyle = '#8A97A5';
+      ctx.font = '400 19px Sarabun, sans-serif';
+      ctx.fillText('มุมมองด้านบน (Top View) — ประตูอยู่ด้านซ้าย', rx, 884);
+      ctx.fillText('ชิ้นสีจาง = วางไปแล้วในขั้นก่อนหน้า · สีเต็ม = วางในขั้นนี้', 40, 930);
+
+      pdf.addPage();
+      pdf.addImage(pg.cv.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 297, 210);
+    }
+
+    pdf.save('loading-plan.pdf');
+  }catch(err){
+    alert('เกิดข้อผิดพลาดในการสร้าง PDF: ' + err.message);
+  }finally{
+    /* คืนค่าฉากและมุมมอง */
+    clearDim();
+    setVisibleCount(+$('stepSlider').value);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(oldW, oldH, false);
+    camera.up.set(0,1,0);
+    camera.aspect = oldW/oldH;
+    camera.updateProjectionMatrix();
+    orbit.theta = oldOrbit.theta; orbit.phi = oldOrbit.phi; orbit.dist = oldOrbit.dist;
+    resize3d();
+    btn.disabled = false; btn.textContent = '⬇ ส่งออก PDF ทีละขั้นตอน';
+  }
+}
+
+/* ============================================================
+   เริ่มต้นโปรแกรม
+   ============================================================ */
+window.addEventListener('load', function(){
+  if(typeof THREE === 'undefined'){
+    $('hint').textContent = 'โหลดไลบรารี 3D ไม่สำเร็จ — กรุณาเชื่อมต่ออินเทอร์เน็ตแล้วเปิดไฟล์ใหม่';
+    return;
+  }
+  $('chLogo').src = CH_LOGO;
+  $('chLogo2').src = CH_LOGO;
+  initContainerSel();
+  initBoxPresetSel();
+  initForm();
+  renderItemRows();
+  initThree();
+  $('btnPack').onclick = runPack;
+  $('btnPdf').onclick = exportPDF;
+  $('btnView').onclick = function(){
+    if(lastResult){ buildContainerMesh(getContainer()); buildCargoMeshes(lastResult); setVisibleCount(+$('stepSlider').value); }
+  };
+  $('stepSlider').oninput = updateStepLabel;
+  $('hint').textContent = 'กด "จัดเรียงสินค้า" เพื่อเริ่มคำนวณ';
+  runPack();   /* รันข้อมูลตัวอย่างทันทีเพื่อให้เห็นผลลัพธ์ */
+});
+</script>
+</body>
+</html>
