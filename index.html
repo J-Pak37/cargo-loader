@@ -6,6 +6,18 @@
 <title>Cargo Loader 3D — โปรแกรมวางแผนจัดเรียงสินค้าเข้าตู้/ขึ้นรถ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WLZZ7YNPKK"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){ dataLayer.push(arguments); }
+gtag('js', new Date());
+gtag('config', 'G-WLZZ7YNPKK');
+/* ยิง event แบบปลอดภัย — ถ้า GA ถูกบล็อก โปรแกรมยังทำงานปกติ */
+function track(name, params){
+  try{ gtag('event', name, params || {}); }catch(e){}
+}
+</script>
 <style>
 :root{
   --bg:#141B24; --panel:#1D2733; --panel2:#232F3E; --field:#16202B;
@@ -172,8 +184,8 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
     <div class="by">โดยช่อง <b>คุยกับไออี</b> · โปรแกรมวางแผนจัดเรียงสินค้าเข้าตู้ / ขึ้นรถบรรทุก</div>
   </div>
   <div class="links">
-    <a class="link-btn link-yt" href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener">▶ ติดตามช่อง คุยกับไออี</a>
-    <a class="link-btn link-fb" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener">✎ แบบสอบถามฟีดแบ็ค</a>
+    <a class="link-btn link-yt" href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener" onclick="track('click_youtube',{location:'header'})">▶ ติดตามช่อง คุยกับไออี</a>
+    <a class="link-btn link-fb" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'header'})">✎ แบบสอบถามฟีดแบ็ค</a>
   </div>
 </header>
 
@@ -250,9 +262,12 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
       <div>
         <div class="cc-name">คุยกับไออี — Talk with IE</div>
         <div class="cc-desc">แจกฟรีเครื่องมือดิจิทัลสำหรับโรงงาน SME · ถ้าโปรแกรมนี้มีประโยชน์ ฝากติดตามช่องและส่งฟีดแบ็คให้ด้วยนะครับ</div>
-        <a href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener">▶ YouTube</a>
-        <a href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener">✎ ส่งฟีดแบ็ค</a>
+        <a href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener" onclick="track('click_youtube',{location:'sidebar'})">▶ YouTube</a>
+        <a href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'sidebar'})">✎ ส่งฟีดแบ็ค</a>
       </div>
+    </div>
+    <div class="dim-note" style="margin-top:8px">
+      เว็บนี้เก็บสถิติการใช้งานแบบไม่ระบุตัวตน (Google Analytics) เพื่อนำไปพัฒนาโปรแกรม · ข้อมูลสินค้าที่คุณกรอกประมวลผลในเครื่องของคุณเท่านั้น ไม่ถูกส่งออกไปที่ใด
     </div>
   </section>
 
@@ -779,6 +794,13 @@ function runPack(){
   btn.disabled = true; btn.textContent = 'กำลังคำนวณ…';
   setTimeout(function(){
     lastResult = packCargo(c, items);
+    track('pack_cargo', {
+      container: c.name,
+      item_types: items.length,
+      total_units: lastResult.totalUnits,
+      placed_units: lastResult.placed.length,
+      utilization_pct: Math.round(lastResult.utilization*100)
+    });
     buildContainerMesh(c);
     buildCargoMeshes(lastResult);
     updateStats(c, lastResult);
@@ -1047,6 +1069,11 @@ async function exportPDF(){
     }
 
     pdf.save('loading-plan.pdf');
+    track('export_pdf', {
+      container: c.name,
+      pages: pageTotal,
+      placed_units: r.placed.length
+    });
   }catch(err){
     alert('เกิดข้อผิดพลาดในการสร้าง PDF: ' + err.message);
   }finally{
