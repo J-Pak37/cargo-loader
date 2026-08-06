@@ -227,7 +227,8 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
         <label>รูปทรง</label>
         <select id="fShape">
           <option value="box">กล่องสี่เหลี่ยม</option>
-          <option value="cylinder">ทรงกระบอก (ถัง/ม้วน)</option>
+          <option value="cyl_v">ทรงกระบอก — วางตั้ง (ถัง, ดรัม)</option>
+          <option value="cyl_h">ทรงกระบอก — วางนอน (ม้วน, ท่อ)</option>
         </select>
       </div>
       <div>
@@ -245,19 +246,14 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
     <div id="cylDims" class="hidden">
       <div class="row">
         <div><label>เส้นผ่านศูนย์กลาง (มม.)</label><input type="number" id="fDia" value="580" min="1"></div>
-        <div><label>สูง/ยาว (มม.)</label><input type="number" id="fCH" value="900" min="1"></div>
+        <div><label id="fCHLabel">สูง (มม.)</label><input type="number" id="fCH" value="900" min="1"></div>
       </div>
-      <label>การวางแนว</label>
-      <select id="fOrient">
-        <option value="v">วางตั้ง — แกนขึ้นลง (ถัง, ดรัม)</option>
-        <option value="h">วางนอน — แกนขนานพื้น (ม้วน, ท่อ)</option>
-      </select>
     </div>
     <div class="row">
       <div><label>น้ำหนัก/ชิ้น (กก.)</label><input type="number" id="fWt" value="10" min="0" step="0.1"></div>
       <div><label>จำนวน (ชิ้น)</label><input type="number" id="fQty" value="10" min="1"></div>
     </div>
-    <label class="chk" id="rotWrap"><input type="checkbox" id="fRot" checked> อนุญาตให้หมุนแนวนอนได้ (สลับกว้าง–ยาว)</label>
+    <label class="chk" id="rotWrap"><input type="checkbox" id="fRot" checked> <span id="rotLabel">อนุญาตให้หมุนแนวนอนได้ (สลับกว้าง–ยาว)</span></label>
     <label class="chk"><input type="checkbox" id="fNoStack"> ห้ามวางสินค้าอื่นทับด้านบน</label>
     <button class="btn btn-add" id="btnAdd">＋ เพิ่มเข้ารายการ</button>
   </section>
@@ -344,7 +340,8 @@ var BOX_PRESETS = [
   {name:'กล่อง Carton 60×40×40 ซม.',      shape:'box', l:600, w:400, h:400, weight:12},
   {name:'กล่อง Carton 50×40×30 ซม.',      shape:'box', l:500, w:400, h:300, weight:8},
   {name:'พาเลทพร้อมสินค้า 100×120×120 ซม.', shape:'box', l:1200, w:1000, h:1200, weight:350},
-  {name:'ถังพลาสติก 200 ลิตร (Ø58×90 ซม.)', shape:'cylinder', dia:580, h:900, weight:80}
+  {name:'ถังพลาสติก 200 ลิตร (Ø58×90 ซม.)', shape:'cylinder', orient:'v', dia:580, h:900, weight:80},
+  {name:'ม้วนฟิล์ม/ท่อ วางนอน (Ø30×120 ซม.)', shape:'cylinder', orient:'h', dia:300, h:1200, weight:25}
 ];
 
 var MAX_UNITS = 700;   /* กันเบราว์เซอร์ค้างเมื่อจำนวนชิ้นมากเกินไป */
@@ -450,19 +447,23 @@ function packCargo(container, items){
     }
   });
 
-  /* ตรวจจับชิ้นที่ถูกวางทับบนทรงกระบอกแนวนอน — หน้างานต้องใช้ไม้หมอน/ลิ่มกันกลิ้ง */
-  var hcylStack = 0;
+  /* ตรวจจับชิ้นที่ถูกวางทับบนทรงกระบอก
+     - แนวนอน: หน้างานต้องใช้ไม้หมอน/ลิ่มกันกลิ้ง
+     - แนวตั้ง: ควรรองแผ่นไม้/พาเลทคั่นชั้น เพราะขอบบนถังเป็นวงแหวน */
+  var hcylStack = 0, vcylStack = 0;
   placed.forEach(function(q){
     if(q.y <= EPS) return;
+    var onH = false, onV = false;
     for(var i=0; i<placed.length; i++){
       var p = placed[i];
-      if(p !== q && p.shape==='cylinder' && p.orient==='h'
+      if(p !== q && p.shape==='cylinder'
          && Math.abs(p.y+p.dy - q.y) < EPS && _ovXZ(q.x,q.z,q.dx,q.dz,p) > 0){
-        q.onHCyl = true;
-        hcylStack++;
-        break;
+        if(p.orient==='h') onH = true;
+        else onV = true;
       }
     }
+    if(onH){ q.onHCyl = true; hcylStack++; }
+    if(onV){ q.onVCyl = true; vcylStack++; }
   });
 
   /* สรุปสถิติ — ปริมาตรจริงของทรงกระบอกใช้ πr²h */
@@ -491,7 +492,7 @@ function packCargo(container, items){
   return {
     placed:placed, steps:steps, unplaced:unplaced, truncated:truncated,
     totalWeight:wt, utilization: cvol>0 ? vol/cvol : 0,
-    totalUnits:units.length, hcylStack:hcylStack
+    totalUnits:units.length, hcylStack:hcylStack, vcylStack:vcylStack
   };
 }
 /* PURE-END */
@@ -569,7 +570,7 @@ function initBoxPresetSel(){
     if(sel.value==='') return;
     var b = BOX_PRESETS[+sel.value];
     $('fName').value = b.name;
-    $('fShape').value = b.shape;
+    $('fShape').value = (b.shape==='box') ? 'box' : (b.orient==='h' ? 'cyl_h' : 'cyl_v');
     $('fShape').onchange();
     if(b.shape==='box'){ $('fL').value=b.l; $('fW').value=b.w; $('fH').value=b.h; }
     else{ $('fDia').value=b.dia; $('fCH').value=b.h; }
@@ -608,17 +609,30 @@ function renderItemRows(){
 var COLOR_CYCLE = ['#3D8BFF','#FF7A2F','#3ECF8E','#FFC53D','#A06BFF','#FF6191','#4FD8E0','#B5CC3B'];
 function initForm(){
   var syncShapeUI = function(){
-    var cyl = $('fShape').value==='cylinder';
-    var horiz = cyl && $('fOrient').value==='h';
+    var v = $('fShape').value;
+    var cyl = (v !== 'box');
+    var vert = (v === 'cyl_v');
     $('boxDims').classList.toggle('hidden', cyl);
     $('cylDims').classList.toggle('hidden', !cyl);
-    /* หมุนได้: กล่อง หรือทรงกระบอกวางนอน (สลับแกนตามยาว/ขวางตู้) */
-    $('rotWrap').classList.toggle('hidden', cyl && !horiz);
+    $('fCHLabel').textContent = (v === 'cyl_h') ? 'ยาว (มม.)' : 'สูง (มม.)';
+    /* แสดง checkbox หมุนทุกรูปทรงเพื่อความสม่ำเสมอ —
+       ทรงกระบอกวางตั้งฐานเป็นวงกลม การหมุนไม่มีผล จึงปิดใช้งานพร้อมอธิบาย */
+    if(vert){
+      $('fRot').checked = false;
+      $('fRot').disabled = true;
+      $('rotLabel').textContent = 'อนุญาตให้หมุนแนวนอนได้ — ไม่มีผลกับทรงวางตั้ง เพราะฐานเป็นวงกลม';
+      $('rotWrap').style.opacity = '0.45';
+    }else{
+      $('fRot').disabled = false;
+      $('fRot').checked = true;
+      $('rotLabel').textContent = 'อนุญาตให้หมุนแนวนอนได้ (สลับกว้าง–ยาว)';
+      $('rotWrap').style.opacity = '1';
+    }
   };
   $('fShape').onchange = syncShapeUI;
-  $('fOrient').onchange = syncShapeUI;
   $('btnAdd').onclick = function(){
-    var shape = $('fShape').value;
+    var v = $('fShape').value;
+    var shape = (v === 'box') ? 'box' : 'cylinder';
     var name = $('fName').value.trim() || ('สินค้า '+(items.length+1));
     var it = {
       name:name, shape:shape, color:$('fColor').value,
@@ -629,7 +643,7 @@ function initForm(){
     if(shape==='cylinder'){
       it.dia = Math.max(1, +$('fDia').value||1);
       it.h   = Math.max(1, +$('fCH').value||1);
-      it.orient = $('fOrient').value;
+      it.orient = (v === 'cyl_h') ? 'h' : 'v';
       if(it.orient!=='h') it.rotatable = false;
     }else{
       it.l = Math.max(1, +$('fL').value||1);
@@ -890,6 +904,7 @@ function updateStats(c, r){
   }
   if(wPct>100) warn.push('น้ำหนักเกินพิกัดบรรทุก!');
   if(r.hcylStack>0) warn.push('มีการวางสินค้าทับทรงกระบอกแนวนอน '+r.hcylStack+' จุด — หน้างานต้องใช้ไม้หมอน/ลิ่มกันกลิ้งรองรับ');
+  if(r.vcylStack>0) warn.push('มีการวางสินค้าทับถัง/ทรงกระบอกวางตั้ง '+r.vcylStack+' จุด — ควรรองแผ่นไม้/พาเลทคั่นชั้นก่อนวาง');
   if(r.truncated) warn.push('จำนวนชิ้นเกิน '+MAX_UNITS+' — คำนวณเฉพาะ '+MAX_UNITS+' ชิ้นแรก');
   $('stWarn').classList.toggle('hidden', warn.length===0);
   $('stWarnTxt').innerHTML = warn.join('<br>');
@@ -1111,14 +1126,21 @@ async function exportPDF(){
       if(it.noStack){
         ctx.fillStyle = '#C43D3D';
         ctx.fillText('⚠ ห้ามวางสินค้าอื่นทับด้านบน', rx, wy);
-        wy += 36;
       }
-      var stepHasHCyl = false;
-      for(var k2=st.from; k2<st.to; k2++){ if(r.placed[k2].onHCyl){ stepHasHCyl = true; break; } }
+      /* รวบรวมคำเตือนการวางทับทรงกระบอกของขั้นนี้ ไปแสดงใต้ภาพ Top View */
+      var stepHasHCyl = false, stepHasVCyl = false;
+      for(var k2=st.from; k2<st.to; k2++){
+        if(r.placed[k2].onHCyl) stepHasHCyl = true;
+        if(r.placed[k2].onVCyl) stepHasVCyl = true;
+      }
+      var warnLines = [];
       if(stepHasHCyl){
-        ctx.fillStyle = '#C43D3D';
-        ctx.fillText('⚠ ขั้นนี้วางทับทรงกระบอกแนวนอน', rx, wy);
-        ctx.fillText('    ต้องใช้ไม้หมอน/ลิ่มกันกลิ้งรองรับ', rx, wy+30);
+        warnLines.push('⚠ ขั้นนี้วางทับทรงกระบอกแนวนอน');
+        warnLines.push('    — ต้องใช้ไม้หมอน/ลิ่มกันกลิ้งรองรับ');
+      }
+      if(stepHasVCyl){
+        warnLines.push('⚠ ขั้นนี้วางทับถัง/ทรงกระบอกวางตั้ง');
+        warnLines.push('    — ควรรองแผ่นไม้/พาเลทคั่นชั้นก่อนวาง');
       }
 
       ctx.drawImage(top, rx, 460, 540, 398);
@@ -1127,6 +1149,15 @@ async function exportPDF(){
       ctx.fillStyle = '#8A97A5';
       ctx.font = '400 19px Sarabun, sans-serif';
       ctx.fillText('มุมมองด้านบน (Top View) — ประตูอยู่ด้านซ้าย', rx, 884);
+      if(warnLines.length){
+        ctx.fillStyle = '#C43D3D';
+        ctx.font = '600 23px Sarabun, sans-serif';
+        warnLines.forEach(function(ln, wi){
+          ctx.fillText(ln, rx, 926 + wi*32);
+        });
+      }
+      ctx.fillStyle = '#8A97A5';
+      ctx.font = '400 19px Sarabun, sans-serif';
       ctx.fillText('ชิ้นสีจาง = วางไปแล้วในขั้นก่อนหน้า · สีเต็ม = วางในขั้นนี้', 40, 930);
 
       pdf.addPage();
