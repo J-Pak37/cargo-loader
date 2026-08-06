@@ -245,8 +245,13 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
     <div id="cylDims" class="hidden">
       <div class="row">
         <div><label>เส้นผ่านศูนย์กลาง (มม.)</label><input type="number" id="fDia" value="580" min="1"></div>
-        <div><label>สูง (มม.)</label><input type="number" id="fCH" value="900" min="1"></div>
+        <div><label>สูง/ยาว (มม.)</label><input type="number" id="fCH" value="900" min="1"></div>
       </div>
+      <label>การวางแนว</label>
+      <select id="fOrient">
+        <option value="v">วางตั้ง — แกนขึ้นลง (ถัง, ดรัม)</option>
+        <option value="h">วางนอน — แกนขนานพื้น (ม้วน, ท่อ)</option>
+      </select>
     </div>
     <div class="row">
       <div><label>น้ำหนัก/ชิ้น (กก.)</label><input type="number" id="fWt" value="10" min="0" step="0.1"></div>
@@ -307,7 +312,7 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
         <div class="stat-num" id="stCnt">–</div>
       </div>
       <div class="stat warn-card hidden" id="stWarn">
-        <div class="lb">⚠ วางไม่ได้</div>
+        <div class="lb">⚠ ข้อควรระวัง</div>
         <div id="stWarnTxt"></div>
       </div>
     </div>
@@ -386,15 +391,17 @@ function _tryPlace(cx, cz, dx, dz, dy, cont, placed){
 function packCargo(container, items){
   var units = [], truncated = false;
   items.forEach(function(it, idx){
+    var horiz = (it.shape==='cylinder' && it.orient==='h');
     var dims = (it.shape==='cylinder')
-      ? {dx:it.dia, dz:it.dia, dy:it.h}
+      ? (horiz ? {dx:it.h, dz:it.dia, dy:it.dia} : {dx:it.dia, dz:it.dia, dy:it.h})
       : {dx:it.l,  dz:it.w,  dy:it.h};
     for(var q=0; q<it.qty; q++){
       if(units.length >= MAX_UNITS){ truncated = true; return; }
       units.push({
-        idx:idx, shape:it.shape, weight:it.weight||0,
+        idx:idx, shape:it.shape, orient:(it.shape==='cylinder' ? (it.orient||'v') : null),
+        weight:it.weight||0,
         dx:dims.dx, dz:dims.dz, dy:dims.dy,
-        rotatable:(it.shape==='box' && !!it.rotatable),
+        rotatable:((it.shape==='box' || horiz) && !!it.rotatable),
         noStack:!!it.noStack
       });
     }
@@ -422,12 +429,15 @@ function packCargo(container, items){
             (Math.abs(pos.x-best.x)<EPS && pos.y < best.y-EPS) ||
             (Math.abs(pos.x-best.x)<EPS && Math.abs(pos.y-best.y)<EPS && pos.z < best.z-EPS))){
           best = pos;
+          best._rot = r;
         }
       }
     }
     if(best){
       best.idx = u.idx; best.shape = u.shape; best.weight = u.weight;
-      best.noStack = u.noStack; best.order = placed.length;
+      best.noStack = u.noStack; best.orient = u.orient;
+      best.axis = (u.shape==='cylinder' && u.orient==='h') ? (best._rot===1 ? 'z' : 'x') : null;
+      best.order = placed.length;
       placed.push(best);
       [[best.x+best.dx, best.z], [best.x, best.z+best.dz]].forEach(function(nc){
         if(nc[0] < container.L-EPS && nc[1] < container.W-EPS){
@@ -440,11 +450,32 @@ function packCargo(container, items){
     }
   });
 
+  /* ตรวจจับชิ้นที่ถูกวางทับบนทรงกระบอกแนวนอน — หน้างานต้องใช้ไม้หมอน/ลิ่มกันกลิ้ง */
+  var hcylStack = 0;
+  placed.forEach(function(q){
+    if(q.y <= EPS) return;
+    for(var i=0; i<placed.length; i++){
+      var p = placed[i];
+      if(p !== q && p.shape==='cylinder' && p.orient==='h'
+         && Math.abs(p.y+p.dy - q.y) < EPS && _ovXZ(q.x,q.z,q.dx,q.dz,p) > 0){
+        q.onHCyl = true;
+        hcylStack++;
+        break;
+      }
+    }
+  });
+
   /* สรุปสถิติ — ปริมาตรจริงของทรงกระบอกใช้ πr²h */
   var vol = 0, wt = 0;
   placed.forEach(function(p){
-    vol += (p.shape==='cylinder') ? Math.PI/4*p.dx*p.dx*p.dy : p.dx*p.dy*p.dz;
-    wt  += p.weight;
+    if(p.shape==='cylinder'){
+      var dia = (p.orient==='h') ? p.dy : p.dx;
+      var len = (p.orient==='h') ? (p.axis==='z' ? p.dz : p.dx) : p.dy;
+      vol += Math.PI/4*dia*dia*len;
+    }else{
+      vol += p.dx*p.dy*p.dz;
+    }
+    wt += p.weight;
   });
   var cvol = container.L*container.W*container.H;
 
@@ -460,7 +491,7 @@ function packCargo(container, items){
   return {
     placed:placed, steps:steps, unplaced:unplaced, truncated:truncated,
     totalWeight:wt, utilization: cvol>0 ? vol/cvol : 0,
-    totalUnits:units.length
+    totalUnits:units.length, hcylStack:hcylStack
   };
 }
 /* PURE-END */
@@ -476,7 +507,8 @@ chLogoImg.src = CH_LOGO;
    ข้อมูลตัวอย่าง (Mock) — งานส่งของโรงงานพลาสติก ด้วยรถ 6 ล้อ
    ============================================================ */
 var items = [
-  {name:'ถังเม็ดพลาสติก 200 ลิตร', shape:'cylinder', dia:580, h:900,  weight:80, qty:8,  color:'#FFC53D', rotatable:false, noStack:true},
+  {name:'ถังเม็ดพลาสติก 200 ลิตร', shape:'cylinder', dia:580, h:900,  weight:80, qty:8,  color:'#FFC53D', rotatable:false, noStack:true,  orient:'v'},
+  {name:'ม้วนฟิล์มหด (วางนอน)',    shape:'cylinder', dia:300, h:1200, weight:25, qty:10, color:'#4FD8E0', rotatable:true,  noStack:false, orient:'h'},
   {name:'กล่อง A ชิ้นงานฉีดสำเร็จ', shape:'box', l:600, w:400, h:400, weight:12, qty:40, color:'#3D8BFF', rotatable:true,  noStack:false},
   {name:'กล่อง B อะไหล่แม่พิมพ์',   shape:'box', l:500, w:400, h:300, weight:15, qty:48, color:'#FF7A2F', rotatable:true,  noStack:false},
   {name:'กล่อง C ฟิล์มแพ็คเกจจิ้ง', shape:'box', l:400, w:300, h:300, weight:6,  qty:60, color:'#3ECF8E', rotatable:true,  noStack:false},
@@ -555,11 +587,12 @@ function renderItemRows(){
   items.forEach(function(it, i){
     var tr = document.createElement('tr');
     var dims = it.shape==='cylinder'
-      ? 'ทรงกระบอก Ø'+it.dia+' × '+it.h+' มม.'
+      ? 'ทรงกระบอก Ø'+it.dia+' × '+(it.orient==='h' ? 'ยาว ' : 'สูง ')+it.h+' มม.'
       : it.l+' × '+it.w+' × '+it.h+' มม.';
     var tags = '';
+    if(it.shape==='cylinder') tags += '<span class="tag">'+(it.orient==='h' ? 'วางนอน' : 'วางตั้ง')+'</span>';
     if(it.noStack) tags += '<span class="tag">ห้ามวางทับ</span>';
-    if(it.shape==='box' && it.rotatable) tags += '<span class="tag">หมุนได้</span>';
+    if(it.rotatable && (it.shape==='box' || it.orient==='h')) tags += '<span class="tag">หมุนได้</span>';
     tr.innerHTML =
       '<td style="width:20px"><span class="dot" style="background:'+it.color+'"></span></td>' +
       '<td><div class="nm">'+it.name+'</div><div class="dm">'+dims+' · '+it.weight+' กก./ชิ้น</div><div>'+tags+'</div></td>' +
@@ -574,12 +607,16 @@ function renderItemRows(){
 
 var COLOR_CYCLE = ['#3D8BFF','#FF7A2F','#3ECF8E','#FFC53D','#A06BFF','#FF6191','#4FD8E0','#B5CC3B'];
 function initForm(){
-  $('fShape').onchange = function(){
+  var syncShapeUI = function(){
     var cyl = $('fShape').value==='cylinder';
+    var horiz = cyl && $('fOrient').value==='h';
     $('boxDims').classList.toggle('hidden', cyl);
     $('cylDims').classList.toggle('hidden', !cyl);
-    $('rotWrap').classList.toggle('hidden', cyl);
+    /* หมุนได้: กล่อง หรือทรงกระบอกวางนอน (สลับแกนตามยาว/ขวางตู้) */
+    $('rotWrap').classList.toggle('hidden', cyl && !horiz);
   };
+  $('fShape').onchange = syncShapeUI;
+  $('fOrient').onchange = syncShapeUI;
   $('btnAdd').onclick = function(){
     var shape = $('fShape').value;
     var name = $('fName').value.trim() || ('สินค้า '+(items.length+1));
@@ -592,6 +629,8 @@ function initForm(){
     if(shape==='cylinder'){
       it.dia = Math.max(1, +$('fDia').value||1);
       it.h   = Math.max(1, +$('fCH').value||1);
+      it.orient = $('fOrient').value;
+      if(it.orient!=='h') it.rotatable = false;
     }else{
       it.l = Math.max(1, +$('fL').value||1);
       it.w = Math.max(1, +$('fW').value||1);
@@ -747,10 +786,21 @@ function buildCargoMeshes(result){
   meshes = [];
   result.placed.forEach(function(p){
     var col = new THREE.Color(items[p.idx] ? items[p.idx].color : '#888888');
-    var geo = (p.shape==='cylinder')
-      ? new THREE.CylinderGeometry(p.dx*S/2*0.98, p.dx*S/2*0.98, p.dy*S*0.985, 24)
-      : new THREE.BoxGeometry(p.dx*S*0.985, p.dy*S*0.985, p.dz*S*0.985);
-    var mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:col}));
+    var geo, mesh;
+    if(p.shape==='cylinder' && p.orient==='h'){
+      var len = (p.axis==='z' ? p.dz : p.dx);
+      geo = new THREE.CylinderGeometry(p.dy*S/2*0.98, p.dy*S/2*0.98, len*S*0.985, 24);
+      mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:col}));
+      /* แกนทรงกระบอกเริ่มที่แนวตั้ง (Y) — หมุนให้นอนตามแกนที่วาง */
+      if(p.axis==='z') mesh.rotation.x = Math.PI/2;
+      else mesh.rotation.z = Math.PI/2;
+    }else if(p.shape==='cylinder'){
+      geo = new THREE.CylinderGeometry(p.dx*S/2*0.98, p.dx*S/2*0.98, p.dy*S*0.985, 24);
+      mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:col}));
+    }else{
+      geo = new THREE.BoxGeometry(p.dx*S*0.985, p.dy*S*0.985, p.dz*S*0.985);
+      mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:col}));
+    }
     mesh.position.set((p.x+p.dx/2)*S, (p.y+p.dy/2)*S, (p.z+p.dz/2)*S);
     var eg = new THREE.LineSegments(
       new THREE.EdgesGeometry(geo),
@@ -836,9 +886,10 @@ function updateStats(c, r){
   var un = Object.keys(r.unplaced);
   var warn = [];
   if(un.length){
-    warn.push(un.map(function(k){ return (items[k]?items[k].name:'?')+' '+r.unplaced[k]+' ชิ้น'; }).join(', ') + ' — พื้นที่ไม่พอหรือขนาดเกินตู้');
+    warn.push('วางไม่ได้: ' + un.map(function(k){ return (items[k]?items[k].name:'?')+' '+r.unplaced[k]+' ชิ้น'; }).join(', ') + ' — พื้นที่ไม่พอหรือขนาดเกินตู้');
   }
   if(wPct>100) warn.push('น้ำหนักเกินพิกัดบรรทุก!');
+  if(r.hcylStack>0) warn.push('มีการวางสินค้าทับทรงกระบอกแนวนอน '+r.hcylStack+' จุด — หน้างานต้องใช้ไม้หมอน/ลิ่มกันกลิ้งรองรับ');
   if(r.truncated) warn.push('จำนวนชิ้นเกิน '+MAX_UNITS+' — คำนวณเฉพาะ '+MAX_UNITS+' ชิ้นแรก');
   $('stWarn').classList.toggle('hidden', warn.length===0);
   $('stWarnTxt').innerHTML = warn.join('<br>');
@@ -1044,7 +1095,10 @@ async function exportPDF(){
       ctx.fillText('วาง: '+it.name.slice(0, 18), rx+44, 164);
       ctx.font = '400 24px Sarabun, sans-serif';
       ctx.fillStyle = '#44515F';
-      var dm2 = it.shape==='cylinder' ? 'ทรงกระบอก Ø'+it.dia+' × '+it.h+' มม.' : 'ขนาด '+it.l+' × '+it.w+' × '+it.h+' มม.';
+      ctx.font = '400 23px Sarabun, sans-serif';
+      var dm2 = it.shape==='cylinder'
+        ? 'ทรงกระบอก'+(it.orient==='h' ? 'วางนอน' : '')+' Ø'+it.dia+' × '+it.h+' มม.'
+        : 'ขนาด '+it.l+' × '+it.w+' × '+it.h+' มม.';
       ctx.fillText(dm2, rx, 214);
       ctx.fillStyle = '#B34700';
       ctx.font = '600 46px Kanit, Sarabun, sans-serif';
@@ -1053,9 +1107,18 @@ async function exportPDF(){
       ctx.font = '400 23px Sarabun, sans-serif';
       ctx.fillText('วางแล้วสะสม: '+st.to+' / '+r.placed.length+' ชิ้น', rx, 330);
       ctx.fillText('น้ำหนักสะสม: '+Math.round(cumW).toLocaleString()+' กก.', rx, 366);
+      var wy = 406;
       if(it.noStack){
         ctx.fillStyle = '#C43D3D';
-        ctx.fillText('⚠ ห้ามวางสินค้าอื่นทับด้านบน', rx, 406);
+        ctx.fillText('⚠ ห้ามวางสินค้าอื่นทับด้านบน', rx, wy);
+        wy += 36;
+      }
+      var stepHasHCyl = false;
+      for(var k2=st.from; k2<st.to; k2++){ if(r.placed[k2].onHCyl){ stepHasHCyl = true; break; } }
+      if(stepHasHCyl){
+        ctx.fillStyle = '#C43D3D';
+        ctx.fillText('⚠ ขั้นนี้วางทับทรงกระบอกแนวนอน', rx, wy);
+        ctx.fillText('    ต้องใช้ไม้หมอน/ลิ่มกันกลิ้งรองรับ', rx, wy+30);
       }
 
       ctx.drawImage(top, rx, 460, 540, 398);
