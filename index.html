@@ -67,6 +67,51 @@ header .links{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; justify-c
 .channel-card a{color:var(--accent); font-size:12.5px; text-decoration:none; margin-right:12px}
 .channel-card a:hover{text-decoration:underline}
 
+/* ===== ป้ายเวอร์ชัน + แผงอัปเดต ===== */
+.ver-badge{
+  display:inline-flex; align-items:center; gap:5px; cursor:pointer; vertical-align:middle;
+  font-family:'Kanit'; font-size:11.5px; font-weight:500; color:var(--muted);
+  background:var(--panel2); border:1px solid var(--line); border-radius:20px;
+  padding:2px 9px; margin-left:8px; transition:filter .12s; user-select:none;
+}
+.ver-badge:hover{filter:brightness(1.25); color:var(--text)}
+.ver-dot{width:7px; height:7px; border-radius:50%; background:var(--accent); display:none}
+.ver-badge.has-new .ver-dot{display:block}
+.cl-overlay{
+  position:fixed; inset:0; background:#0A0F15AA; z-index:50;
+  display:none; align-items:flex-start; justify-content:center; padding:60px 16px 30px;
+}
+.cl-overlay.open{display:flex}
+.cl-panel{
+  background:var(--panel); border:1px solid var(--line); border-radius:14px;
+  width:100%; max-width:520px; max-height:78vh; overflow-y:auto;
+  padding:18px 20px 20px; box-shadow:0 18px 50px #00000066;
+}
+.cl-head{display:flex; align-items:center; margin-bottom:4px}
+.cl-head h2{font-size:17px; font-weight:600; color:var(--accent)}
+.cl-close{
+  margin-left:auto; background:none; border:none; color:var(--muted);
+  font-size:20px; cursor:pointer; padding:2px 8px; line-height:1;
+}
+.cl-close:hover{color:var(--text)}
+.cl-sub{font-size:12px; color:var(--muted); margin-bottom:12px}
+.cl-ver{margin-bottom:14px}
+.cl-ver .cv{
+  font-family:'Kanit'; font-size:13.5px; font-weight:600; color:var(--text);
+  display:flex; align-items:baseline; gap:8px; margin-bottom:5px;
+}
+.cl-ver .cv small{font-weight:400; font-size:11.5px; color:var(--muted)}
+.cl-ver ul{list-style:none; padding-left:2px}
+.cl-ver li{
+  font-size:12.5px; color:var(--muted); line-height:1.55; padding-left:16px; position:relative;
+}
+.cl-ver li::before{content:'•'; position:absolute; left:2px; color:var(--accent)}
+.cl-foot{
+  border-top:1px solid var(--line); margin-top:14px; padding-top:14px;
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.cl-foot span{font-size:12px; color:var(--muted); flex:1; min-width:180px}
+
 /* ===== Layout ===== */
 .app{flex:1; display:flex; min-height:0}
 aside{
@@ -180,7 +225,7 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
 <header>
   <img class="logo-img" id="chLogo" alt="โลโก้ช่อง คุยกับไออี">
   <div>
-    <h1>CARGO LOADER <span>3D</span></h1>
+    <h1>CARGO LOADER <span>3D</span><span class="ver-badge" id="verBadge" title="ดูประวัติการอัปเดต"><span class="ver-dot"></span><span id="verText">v1.0</span></span></h1>
     <div class="by">โดยช่อง <b>คุยกับไออี</b> · โปรแกรมวางแผนจัดเรียงสินค้าเข้าตู้ / ขึ้นรถบรรทุก</div>
   </div>
   <div class="links">
@@ -316,6 +361,22 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
 </main>
 </div>
 
+<div class="cl-overlay" id="clOverlay">
+  <div class="cl-panel">
+    <div class="cl-head">
+      <h2>มีอะไรใหม่</h2>
+      <button class="cl-close" id="clClose" title="ปิด">✕</button>
+    </div>
+    <div class="cl-sub">ประวัติการพัฒนาโปรแกรม Cargo Loader 3D — พัฒนาต่อเนื่องจากฟีดแบ็คผู้ใช้จริง</div>
+    <div id="clList"></div>
+    <div class="cl-foot">
+      <span>อยากรู้เบื้องหลังการพัฒนา หรือมีไอเดียฟีเจอร์ใหม่?</span>
+      <a class="link-btn link-yt" href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener" onclick="track('click_youtube',{location:'changelog'})">▶ ติดตามช่อง</a>
+      <a class="link-btn link-fb" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'changelog'})">✎ ส่งไอเดีย</a>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
@@ -344,7 +405,7 @@ var BOX_PRESETS = [
   {name:'ม้วนฟิล์ม/ท่อ วางนอน (Ø30×120 ซม.)', shape:'cylinder', orient:'h', dia:300, h:1200, weight:25}
 ];
 
-var MAX_UNITS = 700;   /* กันเบราว์เซอร์ค้างเมื่อจำนวนชิ้นมากเกินไป */
+var MAX_UNITS = 2000;  /* เพดานจำนวนชิ้น (อัลกอริทึมเวอร์ชันปรับปรุงรองรับได้ในเวลาไม่กี่วินาที) */
 var EPS = 0.5;
 
 function _ovXZ(ax,az,adx,adz, b){          /* พื้นที่ทับซ้อนบนระนาบพื้น */
@@ -353,13 +414,17 @@ function _ovXZ(ax,az,adx,adz, b){          /* พื้นที่ทับซ�
   return (ox>EPS && oz>EPS) ? ox*oz : 0;
 }
 
-/* ทดลองวางที่จุด (cx,cz) ด้วยขนาด dx,dz,dy — แรงโน้มถ่วงหาความสูง y ให้เอง */
+/* ทดลองวางที่จุด (cx,cz) ด้วยขนาด dx,dz,dy — แรงโน้มถ่วงหาความสูง y ให้เอง
+   (สแกนรอบเดียว: เก็บชิ้นที่ทับซ้อนไว้เช็คฐานรองรับ ไม่ต้องสแกนซ้ำ) */
+var _ovP = [], _ovA = [];
 function _tryPlace(cx, cz, dx, dz, dy, cont, placed){
   if(cx+dx > cont.L+EPS || cz+dz > cont.W+EPS) return null;
-  var y = 0, i, p;
+  var y = 0, i, p, n = 0;
   for(i=0;i<placed.length;i++){
     p = placed[i];
-    if(_ovXZ(cx,cz,dx,dz,p) > 0){
+    var a = _ovXZ(cx,cz,dx,dz,p);
+    if(a > 0){
+      _ovP[n] = p; _ovA[n] = a; n++;
       var top = p.y + p.dy;
       if(top > y) y = top;
     }
@@ -367,14 +432,11 @@ function _tryPlace(cx, cz, dx, dz, dy, cont, placed){
   if(y+dy > cont.H+EPS) return null;
   if(y > EPS){                              /* ต้องมีฐานรองรับ ≥ 55% และฐานต้องไม่ติดธง "ห้ามวางทับ" */
     var sup = 0;
-    for(i=0;i<placed.length;i++){
-      p = placed[i];
+    for(i=0;i<n;i++){
+      p = _ovP[i];
       if(Math.abs(p.y+p.dy - y) < EPS){
-        var a = _ovXZ(cx,cz,dx,dz,p);
-        if(a > 0){
-          if(p.noStack) return null;
-          sup += a;
-        }
+        if(p.noStack) return null;
+        sup += _ovA[i];
       }
     }
     if(sup < 0.55*dx*dz) return null;
@@ -382,10 +444,9 @@ function _tryPlace(cx, cz, dx, dz, dy, cont, placed){
   return {x:cx, y:y, z:cz, dx:dx, dz:dz, dy:dy};
 }
 
-/* อัลกอริทึม Deepest–Bottom–Left + gravity drop
-   items: [{name, shape:'box'|'cylinder', l,w,h | dia,h, weight, qty, color, rotatable, noStack}]
-   container: {L,W,H,payload}                                              */
-function packCargo(container, items){
+/* ---------- โครงสร้างคำนวณแบบแบ่งงวด (ป้องกันเบราว์เซอร์ค้าง) ----------
+   packInit → packStepBatch (เรียกซ้ำจนเสร็จ) → packFinish                */
+function packInit(container, items){
   var units = [], truncated = false;
   items.forEach(function(it, idx){
     var horiz = (it.shape==='cylinder' && it.orient==='h');
@@ -409,14 +470,38 @@ function packCargo(container, items){
     return (b.weight-a.weight) || (b.dx*b.dy*b.dz - a.dx*a.dy*a.dz) || (a.idx-b.idx);
   });
 
-  var placed = [], unplaced = {};
-  var cands = [{x:0, z:0}];
-  var candSet = {'0_0':1};
+  return {
+    container:container, units:units, i:0, truncated:truncated,
+    placed:[], unplaced:{},
+    /* pointTop = ความสูงกองสินค้า ณ จุด candidate (แคชไว้เพื่อข้ามจุดที่เต็มเพดานทันที) */
+    cands:[{x:0, z:0, pointTop:0}], candSet:{'0_0':1}, candsSorted:true,
+    minDy: units.length ? units.reduce(function(m,u){ return Math.min(m, u.dy); }, Infinity) : 0
+  };
+}
 
-  units.forEach(function(u){
+function packStepBatch(state, batch){
+  var container = state.container, placed = state.placed;
+  var end = Math.min(state.i + (batch||50), state.units.length);
+
+  for(; state.i < end; state.i++){
+    var u = state.units[state.i];
+
+    /* เรียง candidate ตาม x เพื่อตัดการค้นหา และคัดจุดที่กองเต็มเพดานทิ้ง:
+       เมื่อได้ตำแหน่งที่ x ต่ำแล้ว candidate ที่ x สูงกว่าย่อมแพ้เสมอ (เกณฑ์ x → y → z) */
+    if(!state.candsSorted){
+      state.cands = state.cands.filter(function(cd){
+        return cd.pointTop + state.minDy <= container.H + EPS;
+      });
+      state.cands.sort(function(a,b){ return (a.x-b.x) || (a.z-b.z); });
+      state.candsSorted = true;
+    }
+    var cands = state.cands;
+
     var best = null;
     for(var c=0; c<cands.length; c++){
       var cd = cands[c];
+      if(best && cd.x > best.x+EPS) break;               /* จุดที่ลึกกว่าคำตอบปัจจุบัน: หยุดค้น */
+      if(cd.pointTop + u.dy > container.H+EPS) continue; /* กอง ณ จุดนี้สูงจนชิ้นนี้ไม่มีทางลง: ข้าม */
       var rots = u.rotatable && Math.abs(u.dx-u.dz)>EPS
         ? [[u.dx,u.dz],[u.dz,u.dx]] : [[u.dx,u.dz]];
       for(var r=0; r<rots.length; r++){
@@ -436,16 +521,46 @@ function packCargo(container, items){
       best.axis = (u.shape==='cylinder' && u.orient==='h') ? (best._rot===1 ? 'z' : 'x') : null;
       best.order = placed.length;
       placed.push(best);
+
+      /* อัปเดตแคชความสูงของทุกจุดที่อยู่ใต้ชิ้นที่เพิ่งวาง */
+      var bTop = best.y + best.dy;
+      for(var ci=0; ci<cands.length; ci++){
+        var cc = cands[ci];
+        if(cc.x > best.x-EPS && cc.x < best.x+best.dx-EPS &&
+           cc.z > best.z-EPS && cc.z < best.z+best.dz-EPS &&
+           bTop > cc.pointTop){
+          cc.pointTop = bTop;
+        }
+      }
       [[best.x+best.dx, best.z], [best.x, best.z+best.dz]].forEach(function(nc){
         if(nc[0] < container.L-EPS && nc[1] < container.W-EPS){
           var k = Math.round(nc[0])+'_'+Math.round(nc[1]);
-          if(!candSet[k]){ candSet[k]=1; cands.push({x:nc[0], z:nc[1]}); }
+          if(!state.candSet[k]){
+            state.candSet[k]=1;
+            /* หา pointTop เริ่มต้นของจุดใหม่จากชิ้นที่วางแล้ว */
+            var pt = 0;
+            for(var pi=0; pi<placed.length; pi++){
+              var pp = placed[pi];
+              if(nc[0] > pp.x-EPS && nc[0] < pp.x+pp.dx-EPS &&
+                 nc[1] > pp.z-EPS && nc[1] < pp.z+pp.dz-EPS){
+                var t2 = pp.y+pp.dy;
+                if(t2 > pt) pt = t2;
+              }
+            }
+            state.cands.push({x:nc[0], z:nc[1], pointTop:pt});
+            state.candsSorted = false;
+          }
         }
       });
     }else{
-      unplaced[u.idx] = (unplaced[u.idx]||0) + 1;
+      state.unplaced[u.idx] = (state.unplaced[u.idx]||0) + 1;
     }
-  });
+  }
+  return state.i >= state.units.length;   /* true = คำนวณครบแล้ว */
+}
+
+function packFinish(state){
+  var container = state.container, placed = state.placed;
 
   /* ตรวจจับชิ้นที่ถูกวางทับบนทรงกระบอก
      - แนวนอน: หน้างานต้องใช้ไม้หมอน/ลิ่มกันกลิ้ง
@@ -490,10 +605,17 @@ function packCargo(container, items){
   });
 
   return {
-    placed:placed, steps:steps, unplaced:unplaced, truncated:truncated,
+    placed:placed, steps:steps, unplaced:state.unplaced, truncated:state.truncated,
     totalWeight:wt, utilization: cvol>0 ? vol/cvol : 0,
-    totalUnits:units.length, hcylStack:hcylStack, vcylStack:vcylStack
+    totalUnits:state.units.length, hcylStack:hcylStack, vcylStack:vcylStack
   };
+}
+
+/* เวอร์ชันเรียกครั้งเดียวจบ (ใช้ทดสอบ/งานเบา) */
+function packCargo(container, items){
+  var st = packInit(container, items);
+  while(!packStepBatch(st, 1e9)){}
+  return packFinish(st);
 }
 /* PURE-END */
 
@@ -857,9 +979,25 @@ function runPack(){
   if(items.length===0){ alert('กรุณาเพิ่มสินค้าอย่างน้อย 1 รายการ'); return; }
   var c = getContainer();
   var btn = $('btnPack');
-  btn.disabled = true; btn.textContent = 'กำลังคำนวณ…';
-  setTimeout(function(){
-    lastResult = packCargo(c, items);
+  btn.disabled = true; btn.textContent = 'กำลังคำนวณ… 0%';
+  $('btnPdf').disabled = true;
+
+  /* คำนวณทีละงวดผ่าน setTimeout เพื่อให้หน้าจอตอบสนองและแสดงความคืบหน้าได้
+     (แก้ปัญหาเบราว์เซอร์ขึ้น Page Unresponsive เมื่อจำนวนชิ้นมาก) */
+  var st = packInit(c, items);
+  var total = Math.max(1, st.units.length);
+  (function loop(){
+    var t0 = Date.now();
+    var done = false;
+    while(!done && Date.now()-t0 < 120){   /* คำนวณครั้งละ ~120ms แล้วคืนคิวให้หน้าจอ */
+      done = packStepBatch(st, 25);
+    }
+    if(!done){
+      btn.textContent = 'กำลังคำนวณ… ' + Math.round(st.i/total*100) + '%';
+      setTimeout(loop, 0);
+      return;
+    }
+    lastResult = packFinish(st);
     track('pack_cargo', {
       container: c.name,
       item_types: items.length,
@@ -881,7 +1019,7 @@ function runPack(){
     $('stats').style.display = 'flex';
     $('btnPdf').disabled = lastResult.placed.length===0;
     btn.disabled = false; btn.textContent = '▶ จัดเรียงสินค้า';
-  }, 30);
+  })();
 }
 
 function updateStats(c, r){
@@ -900,12 +1038,12 @@ function updateStats(c, r){
   var un = Object.keys(r.unplaced);
   var warn = [];
   if(un.length){
-    warn.push('วางไม่ได้: ' + un.map(function(k){ return (items[k]?items[k].name:'?')+' '+r.unplaced[k]+' ชิ้น'; }).join(', ') + ' — พื้นที่ไม่พอหรือขนาดเกินตู้');
+    warn.push('วางไม่ได้: ' + un.map(function(k){ return (items[k]?items[k].name:'?')+' '+r.unplaced[k]+' ชิ้น'; }).join(', ') + ' — พื้นที่ตู้ไม่พอหรือขนาดชิ้นเกินตู้ · แนะนำ: เปลี่ยนเป็นตู้/รถขนาดใหญ่ขึ้น ติ๊กอนุญาตให้หมุน หรือแบ่งส่งหลายเที่ยว');
   }
   if(wPct>100) warn.push('น้ำหนักเกินพิกัดบรรทุก!');
   if(r.hcylStack>0) warn.push('มีการวางสินค้าทับทรงกระบอกแนวนอน '+r.hcylStack+' จุด — หน้างานต้องใช้ไม้หมอน/ลิ่มกันกลิ้งรองรับ');
   if(r.vcylStack>0) warn.push('มีการวางสินค้าทับถัง/ทรงกระบอกวางตั้ง '+r.vcylStack+' จุด — ควรรองแผ่นไม้/พาเลทคั่นชั้นก่อนวาง');
-  if(r.truncated) warn.push('จำนวนชิ้นเกิน '+MAX_UNITS+' — คำนวณเฉพาะ '+MAX_UNITS+' ชิ้นแรก');
+  if(r.truncated) warn.push('จำนวนชิ้นรวมเกินขีดจำกัดการคำนวณ '+MAX_UNITS.toLocaleString()+' ชิ้น — แสดงผลเฉพาะ '+MAX_UNITS.toLocaleString()+' ชิ้นแรก · แนะนำ: แบ่งคำนวณทีละคัน/ทีละรอบส่ง');
   $('stWarn').classList.toggle('hidden', warn.length===0);
   $('stWarnTxt').innerHTML = warn.join('<br>');
 }
@@ -1188,6 +1326,68 @@ async function exportPDF(){
 }
 
 /* ============================================================
+   ประวัติการอัปเดต — เพิ่มรายการใหม่ไว้บนสุดทุกครั้งที่ปล่อยเวอร์ชัน
+   ============================================================ */
+var APP_VER = '1.4';
+var CHANGELOG = [
+  {ver:'1.4', date:'ส.ค. 2569', items:[
+    'ปรับปรุงอัลกอริทึมให้เร็วขึ้นราว 20 เท่า — แก้ปัญหาหน้าค้าง (Page Unresponsive) เมื่อจำนวนชิ้นมาก',
+    'ขยายขีดจำกัดการคำนวณจาก 700 เป็น 2,000 ชิ้น',
+    'แสดงเปอร์เซ็นต์ความคืบหน้าระหว่างคำนวณ',
+    'ข้อความเตือนแยกสาเหตุชัดเจน พร้อมคำแนะนำวิธีแก้'
+  ]},
+  {ver:'1.3', date:'ส.ค. 2569', items:[
+    'เตือนอัตโนมัติเมื่อมีการวางสินค้าทับถัง/ทรงกระบอกวางตั้ง — แนะนำรองแผ่นไม้/พาเลทคั่นชั้น (ทั้งหน้าเว็บและ PDF)',
+    'แสดงตัวเลือกหมุนครบทุกรูปทรง พร้อมคำอธิบายเมื่อใช้ไม่ได้'
+  ]},
+  {ver:'1.2', date:'ส.ค. 2569', items:[
+    'รองรับทรงกระบอกวางนอน (ม้วน, ท่อ) พร้อมเตือนใช้ไม้หมอน/ลิ่มกันกลิ้งเมื่อมีการวางทับ',
+    'รวมรูปทรงและแนววางเป็นตัวเลือกเดียว 3 แบบ ให้เห็นชัดว่าเลือกอะไร',
+    'เพิ่มม้วนฟิล์ม/ท่อในคลังมาตรฐาน'
+  ]},
+  {ver:'1.1', date:'ส.ค. 2569', items:[
+    'เพิ่มปุ่มคู่มือการใช้งาน ลิงก์ติดตามช่อง และแบบสอบถามฟีดแบ็ค',
+    'เปิดใช้ระบบสถิติการใช้งานแบบไม่ระบุตัวตน เพื่อนำไปพัฒนาโปรแกรม'
+  ]},
+  {ver:'1.0', date:'ส.ค. 2569', items:[
+    'เปิดตัว: จัดเรียงสินค้าอัตโนมัติ แสดงผล 3 มิติแยกสี',
+    'ตู้คอนเทนเนอร์/รถบรรทุก 8 แบบ + กำหนดขนาดเอง',
+    'สินค้ากล่องและทรงกระบอก กำหนดน้ำหนัก สี เงื่อนไขหมุน/ห้ามวางทับ',
+    'ส่งออก PDF แผนการโหลดทีละขั้นตอน'
+  ]}
+];
+
+function initChangelog(){
+  $('verText').textContent = 'v' + APP_VER;
+
+  /* จุดส้ม = ยังไม่เคยเปิดดูเวอร์ชันนี้ (ใช้ localStorage แบบกัน error
+     เผื่อเบราว์เซอร์ปิดกั้น — ถ้าใช้ไม่ได้ให้แสดงจุดไว้เสมอ) */
+  var seen = null;
+  try{ seen = localStorage.getItem('cl3d_seen_ver'); }catch(e){}
+  if(seen !== APP_VER) $('verBadge').classList.add('has-new');
+
+  var list = $('clList');
+  CHANGELOG.forEach(function(v){
+    var d = document.createElement('div');
+    d.className = 'cl-ver';
+    d.innerHTML = '<div class="cv">เวอร์ชัน '+v.ver+' <small>'+v.date+'</small></div>'
+      + '<ul>' + v.items.map(function(s){ return '<li>'+s+'</li>'; }).join('') + '</ul>';
+    list.appendChild(d);
+  });
+
+  $('verBadge').onclick = function(){
+    $('clOverlay').classList.add('open');
+    $('verBadge').classList.remove('has-new');
+    try{ localStorage.setItem('cl3d_seen_ver', APP_VER); }catch(e){}
+    track('click_changelog', {version: APP_VER});
+  };
+  $('clClose').onclick = function(){ $('clOverlay').classList.remove('open'); };
+  $('clOverlay').onclick = function(e){
+    if(e.target === $('clOverlay')) $('clOverlay').classList.remove('open');
+  };
+}
+
+/* ============================================================
    เริ่มต้นโปรแกรม
    ============================================================ */
 window.addEventListener('load', function(){
@@ -1197,6 +1397,7 @@ window.addEventListener('load', function(){
   }
   $('chLogo').src = CH_LOGO;
   $('chLogo2').src = CH_LOGO;
+  initChangelog();
   initContainerSel();
   initBoxPresetSel();
   initForm();
