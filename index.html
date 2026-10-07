@@ -112,6 +112,24 @@ header .links{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; justify-c
 }
 .cl-foot span{font-size:12px; color:var(--muted); flex:1; min-width:180px}
 
+/* ===== แผงแก้ไขด้วยตนเอง ===== */
+.edit-panel{
+  position:absolute; top:12px; left:12px; z-index:20; width:264px;
+  background:#141B24F0; border:1px solid var(--accent); border-radius:12px;
+  padding:12px 14px; backdrop-filter:blur(4px);
+}
+.ep-head{display:flex; align-items:center; gap:8px; margin-bottom:2px}
+.ep-head b{font-family:'Kanit'; font-size:14px; color:var(--accent); flex:1;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ep-dims{font-size:11px; color:var(--muted); margin-bottom:9px; line-height:1.45}
+.ep-lb{font-size:11px; color:var(--muted); margin:8px 0 4px; letter-spacing:.4px}
+.ep-row{display:grid; grid-template-columns:1fr 1fr; gap:6px}
+.ep-row .btn{padding:6px 4px; font-size:12px}
+.ep-flash{font-size:11.5px; color:var(--warn); min-height:16px; margin-top:8px; line-height:1.4}
+.ep-note{font-size:10.5px; color:var(--muted); margin-top:6px; line-height:1.5;
+  border-top:1px solid var(--line); padding-top:7px}
+.tool-tip{font-size:11.5px; color:var(--muted); white-space:nowrap}
+
 /* ===== Layout ===== */
 .app{flex:1; display:flex; min-height:0}
 aside{
@@ -230,7 +248,7 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
   </div>
   <div class="links">
     <a class="link-btn link-yt" href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener" onclick="track('click_youtube',{location:'header'})">▶ ติดตามช่อง คุยกับไออี</a>
-    <a class="link-btn link-fb" href="https://drive.google.com/file/d/1iSipf-BT2BfZcO_YEeOoAiRogLhwJYaB/view?usp=sharing" target="_blank" rel="noopener" onclick="track('click_manual',{location:'header'})">📖 คู่มือการใช้งาน</a>
+    <a class="link-btn link-fb" href="https://drive.google.com/file/d/1zqXQWT4lEB8d15jIQ7V3hWoiiBrvjMdT/view?usp=sharing" target="_blank" rel="noopener" onclick="track('click_manual',{location:'header'})">📖 คู่มือการใช้งาน</a>
     <a class="link-btn link-fb" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'header'})">✎ แบบสอบถามฟีดแบ็ค</a>
   </div>
 </header>
@@ -308,9 +326,9 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
       <img id="chLogo2" alt="โลโก้ช่อง คุยกับไออี">
       <div>
         <div class="cc-name">คุยกับไออี — Talk with IE</div>
-        <div class="cc-desc">แจกฟรีเครื่องมือดิจิทัลสำหรับโรงงาน SME · ถ้าโปรแกรมนี้มีประโยชน์ ฝากติดตามช่องและส่งฟีดแบ็คให้ด้วยนะ ขอบพระคุณทุกท่านจากใจ</div>
+        <div class="cc-desc">แจกฟรีเครื่องมือดิจิทัลสำหรับโรงงาน SME · ถ้าโปรแกรมนี้มีประโยชน์ ฝากติดตามช่องและส่งฟีดแบ็คให้ด้วยนะครับ</div>
         <a href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener" onclick="track('click_youtube',{location:'sidebar'})">▶ YouTube</a>
-        <a href="https://drive.google.com/file/d/1iSipf-BT2BfZcO_YEeOoAiRogLhwJYaB/view?usp=sharing" target="_blank" rel="noopener" onclick="track('click_manual',{location:'sidebar'})">📖 คู่มือ</a>
+        <a href="https://drive.google.com/file/d/1zqXQWT4lEB8d15jIQ7V3hWoiiBrvjMdT/view?usp=sharing" target="_blank" rel="noopener" onclick="track('click_manual',{location:'sidebar'})">📖 คู่มือ</a>
         <a href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'sidebar'})">✎ ส่งฟีดแบ็ค</a>
       </div>
     </div>
@@ -327,6 +345,8 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
     <button class="btn btn-accent" id="btnPack">▶ จัดเรียงสินค้า</button>
     <button class="btn btn-ghost" id="btnPdf" disabled>⬇ ส่งออก PDF ทีละขั้นตอน</button>
     <button class="btn btn-ghost" id="btnView">รีเซ็ตมุมมอง</button>
+    <button class="btn btn-ghost hidden" id="btnPlaceRest">⟲ วางชิ้นตกค้าง</button>
+    <span class="tool-tip">💡 คลิกชิ้น = เลือก · ลากชิ้น = ย้าย</span>
     <div class="step-wrap">
       <label for="stepSlider">ดูทีละชิ้น</label>
       <input type="range" id="stepSlider" min="0" max="0" value="0" disabled>
@@ -337,6 +357,30 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
   <div class="viewport">
     <canvas id="c3d"></canvas>
     <div class="hint" id="hint">กำลังโหลด…</div>
+    <div class="edit-panel hidden" id="editPanel">
+      <div class="ep-head"><b id="epName"></b><button class="cl-close" id="epClose" title="ปิด">✕</button></div>
+      <div class="ep-dims" id="epDims"></div>
+      <div class="ep-row">
+        <button class="btn btn-ghost" id="epRotate">⟳ หมุน 90°</button>
+        <button class="btn btn-ghost" id="epRemove">🗑 เอาออก</button>
+      </div>
+      <div class="ep-lb">เลื่อนชิดจนสุด</div>
+      <div class="ep-row">
+        <button class="btn btn-ghost ep-mv" data-dir="x-">⇤ ชิดหัวตู้</button>
+        <button class="btn btn-ghost ep-mv" data-dir="x+">ชิดประตู ⇥</button>
+        <button class="btn btn-ghost ep-mv" data-dir="z-">⇤ ชิดซ้าย</button>
+        <button class="btn btn-ghost ep-mv" data-dir="z+">ชิดขวา ⇥</button>
+      </div>
+      <div class="ep-lb">ขยับทีละ 50 มม.</div>
+      <div class="ep-row">
+        <button class="btn btn-ghost ep-nd" data-mx="-50" data-mz="0">◀ ไปหัวตู้</button>
+        <button class="btn btn-ghost ep-nd" data-mx="50" data-mz="0">ไปประตู ▶</button>
+        <button class="btn btn-ghost ep-nd" data-mx="0" data-mz="-50">◀ ไปซ้าย</button>
+        <button class="btn btn-ghost ep-nd" data-mx="0" data-mz="50">ไปขวา ▶</button>
+      </div>
+      <div class="ep-flash" id="epFlash"></div>
+      <div class="ep-note">ลากชิ้นในภาพเพื่อย้ายตำแหน่งได้โดยตรง (มีระบบดูดเข้าชิดอัตโนมัติ) · ใช้ปุ่มชุดนี้เก็บงานละเอียด · ชิ้นที่ "เอาออก" จะไปรอที่ปุ่ม "วางชิ้นตกค้าง"</div>
+    </div>
     <div class="stats" id="stats" style="display:none">
       <div class="stat">
         <div class="lb">การใช้พื้นที่ (UTILIZATION)</div>
@@ -561,6 +605,7 @@ function packStepBatch(state, batch){
 
 function packFinish(state){
   var container = state.container, placed = state.placed;
+  placed.forEach(function(p){ p.onHCyl = false; p.onVCyl = false; });
 
   /* ตรวจจับชิ้นที่ถูกวางทับบนทรงกระบอก
      - แนวนอน: หน้างานต้องใช้ไม้หมอน/ลิ่มกันกลิ้ง
@@ -605,6 +650,7 @@ function packFinish(state){
   });
 
   return {
+    container:container,
     placed:placed, steps:steps, unplaced:state.unplaced, truncated:state.truncated,
     totalWeight:wt, utilization: cvol>0 ? vol/cvol : 0,
     totalUnits:state.units.length, hcylStack:hcylStack, vcylStack:vcylStack
@@ -616,6 +662,183 @@ function packCargo(container, items){
   var st = packInit(container, items);
   while(!packStepBatch(st, 1e9)){}
   return packFinish(st);
+}
+
+/* ---------- โหมดแก้ไขด้วยตนเอง (Manual Edit) ---------- */
+function sumUnplaced(u){ var s=0; for(var k in u) s+=u[k]; return s; }
+
+/* วางทุกชิ้นลงตามแรงโน้มถ่วงใหม่ จากชั้นล่างขึ้นบน (คงตำแหน่ง x,z เดิม) */
+function reGravity(placed){
+  var order = placed.slice().sort(function(a,b){ return a.y-b.y; });
+  var done = [];
+  order.forEach(function(p){
+    var y = 0;
+    for(var i=0;i<done.length;i++){
+      var q = done[i];
+      if(_ovXZ(p.x,p.z,p.dx,p.dz,q) > 0){
+        var t = q.y+q.dy;
+        if(t > y) y = t;
+      }
+    }
+    p.y = y;
+    done.push(p);
+  });
+}
+
+function _coll3D(x,y,z,dx,dy,dz,q){
+  return x < q.x+q.dx-EPS && q.x < x+dx-EPS &&
+         y < q.y+q.dy-EPS && q.y < y+dy-EPS &&
+         z < q.z+q.dz-EPS && q.z < z+dz-EPS;
+}
+
+/* ขยับทีละก้าว — คืน null เมื่อสำเร็จ หรือข้อความเหตุผลเมื่อไม่ได้ */
+function manualNudge(p, mx, mz, cont, placed){
+  var nx = p.x+mx, nz = p.z+mz;
+  if(nx < -EPS || nz < -EPS || nx+p.dx > cont.L+EPS || nz+p.dz > cont.W+EPS) return 'ติดผนังตู้';
+  for(var i=0;i<placed.length;i++){
+    var q = placed[i];
+    if(q !== p && _coll3D(nx,p.y,nz,p.dx,p.dy,p.dz,q)) return 'ชนชิ้นอื่น';
+  }
+  p.x = Math.max(0,nx); p.z = Math.max(0,nz);
+  reGravity(placed);
+  return null;
+}
+
+/* เลื่อนชิดจนสุด — หยุดที่ผนังหรือชิ้นแรกที่ขวาง (ระดับความสูงเดียวกัน) */
+function manualSweep(p, dir, cont, placed){
+  var yOv = function(q){ return q.y < p.y+p.dy-EPS && p.y < q.y+q.dy-EPS; };
+  var zOv = function(q){ return q.z < p.z+p.dz-EPS && p.z < q.z+q.dz-EPS; };
+  var xOv = function(q){ return q.x < p.x+p.dx-EPS && p.x < q.x+q.dx-EPS; };
+  var i, q, lim;
+  if(dir==='x-'){
+    lim = 0;
+    for(i=0;i<placed.length;i++){ q=placed[i];
+      if(q!==p && yOv(q) && zOv(q) && q.x+q.dx <= p.x+EPS && q.x+q.dx > lim) lim = q.x+q.dx; }
+    p.x = lim;
+  }else if(dir==='x+'){
+    lim = cont.L - p.dx;
+    for(i=0;i<placed.length;i++){ q=placed[i];
+      if(q!==p && yOv(q) && zOv(q) && q.x >= p.x+p.dx-EPS && q.x-p.dx < lim) lim = q.x-p.dx; }
+    p.x = Math.max(0, lim);
+  }else if(dir==='z-'){
+    lim = 0;
+    for(i=0;i<placed.length;i++){ q=placed[i];
+      if(q!==p && yOv(q) && xOv(q) && q.z+q.dz <= p.z+EPS && q.z+q.dz > lim) lim = q.z+q.dz; }
+    p.z = lim;
+  }else{
+    lim = cont.W - p.dz;
+    for(i=0;i<placed.length;i++){ q=placed[i];
+      if(q!==p && yOv(q) && xOv(q) && q.z >= p.z+p.dz-EPS && q.z-p.dz < lim) lim = q.z-p.dz; }
+    p.z = Math.max(0, lim);
+  }
+  reGravity(placed);
+}
+
+/* หมุน 90 องศารอบมุมเดิม (สลับกว้าง-ยาว) */
+function manualRotate(p, cont, placed){
+  if(p.shape==='cylinder' && p.orient!=='h') return 'ทรงกระบอกวางตั้งฐานเป็นวงกลม การหมุนไม่มีผล';
+  var ndx = p.dz, ndz = p.dx;
+  if(p.x+ndx > cont.L+EPS || p.z+ndz > cont.W+EPS) return 'หมุนไม่ได้ — ติดผนังตู้ ลองเลื่อนออกก่อน';
+  for(var i=0;i<placed.length;i++){
+    var q = placed[i];
+    if(q !== p && _coll3D(p.x,p.y,p.z,ndx,p.dy,ndz,q)) return 'หมุนไม่ได้ — ชนชิ้นอื่น ลองเลื่อนออกก่อน';
+  }
+  p.dx = ndx; p.dz = ndz;
+  if(p.shape==='cylinder' && p.orient==='h') p.axis = (p.axis==='x') ? 'z' : 'x';
+  reGravity(placed);
+  return null;
+}
+
+/* ดูดขอบชิ้นเข้าหาผนังตู้และขอบชิ้นข้างเคียง ภายในระยะ snap (มม.) */
+function dragSnap(p, nx, nz, cont, placed, snap){
+  nx = Math.max(0, Math.min(cont.L - p.dx, nx));
+  nz = Math.max(0, Math.min(cont.W - p.dz, nz));
+  var bestX = nx, bdx = snap + 1, bestZ = nz, bdz = snap + 1;
+  var tryX = function(v){ var d = Math.abs(v - nx); if(d <= snap && d < bdx){ bdx = d; bestX = v; } };
+  var tryZ = function(v){ var d = Math.abs(v - nz); if(d <= snap && d < bdz){ bdz = d; bestZ = v; } };
+  tryX(0); tryX(cont.L - p.dx);
+  tryZ(0); tryZ(cont.W - p.dz);
+  for(var i=0; i<placed.length; i++){
+    var q = placed[i]; if(q === p) continue;
+    tryX(q.x + q.dx); tryX(q.x - p.dx); tryX(q.x); tryX(q.x + q.dx - p.dx);
+    tryZ(q.z + q.dz); tryZ(q.z - p.dz); tryZ(q.z); tryZ(q.z + q.dz - p.dz);
+  }
+  return {
+    x: Math.max(0, Math.min(cont.L - p.dx, bestX)),
+    z: Math.max(0, Math.min(cont.W - p.dz, bestZ))
+  };
+}
+
+/* พรีวิวผลการปล่อยชิ้น ณ (nx,nz): หา y ตามแรงโน้มถ่วง + ตรวจว่าวางได้ไหม
+   (เกินเพดานตู้ หรือจะไปนั่งทับชิ้นที่ติดธงห้ามวางทับ = วางไม่ได้) */
+function dragPreview(p, nx, nz, cont, placed){
+  var y = 0, i, q;
+  for(i=0; i<placed.length; i++){
+    q = placed[i];
+    if(q !== p && _ovXZ(nx, nz, p.dx, p.dz, q) > 0){
+      var t = q.y + q.dy;
+      if(t > y) y = t;
+    }
+  }
+  var valid = (y + p.dy <= cont.H + EPS);
+  if(valid && y > EPS){
+    for(i=0; i<placed.length; i++){
+      q = placed[i];
+      if(q !== p && q.noStack && Math.abs(q.y+q.dy - y) < EPS && _ovXZ(nx, nz, p.dx, p.dz, q) > 0){
+        valid = false; break;
+      }
+    }
+  }
+  return {x:nx, z:nz, y:y, valid:valid};
+}
+
+/* ลองวางชิ้นตกค้างเพิ่ม โดยไม่ขยับชิ้นที่วางอยู่แล้ว */
+function packMoreUnits(cont, placed, unplaced, items){
+  var units = [];
+  Object.keys(unplaced).forEach(function(k){
+    var it = items[+k]; if(!it || !unplaced[k]) return;
+    var horiz = (it.shape==='cylinder' && it.orient==='h');
+    var dims = (it.shape==='cylinder')
+      ? (horiz ? {dx:it.h, dz:it.dia, dy:it.dia} : {dx:it.dia, dz:it.dia, dy:it.h})
+      : {dx:it.l, dz:it.w, dy:it.h};
+    for(var q=0; q<unplaced[k]; q++){
+      units.push({idx:+k, shape:it.shape, orient:(it.shape==='cylinder' ? (it.orient||'v') : null),
+        weight:it.weight||0, dx:dims.dx, dz:dims.dz, dy:dims.dy,
+        rotatable:((it.shape==='box'||horiz) && !!it.rotatable), noStack:!!it.noStack});
+    }
+  });
+  if(!units.length) return {added:0, unplaced:unplaced};
+  units.sort(function(a,b){
+    return (b.weight-a.weight) || (b.dx*b.dy*b.dz - a.dx*a.dy*a.dz) || (a.idx-b.idx);
+  });
+
+  /* สร้าง candidate จากมุมของชิ้นที่วางอยู่ แล้วหา pointTop ของแต่ละจุด */
+  var cset = {'0_0':1}, cands = [{x:0, z:0, pointTop:0}];
+  placed.forEach(function(b){
+    [[b.x+b.dx, b.z], [b.x, b.z+b.dz], [b.x, b.z]].forEach(function(nc){
+      if(nc[0] < cont.L-EPS && nc[1] < cont.W-EPS){
+        var k = Math.round(nc[0])+'_'+Math.round(nc[1]);
+        if(!cset[k]){ cset[k]=1; cands.push({x:nc[0], z:nc[1], pointTop:0}); }
+      }
+    });
+  });
+  cands.forEach(function(cd){
+    var pt = 0;
+    for(var i=0;i<placed.length;i++){
+      var pp = placed[i];
+      if(cd.x > pp.x-EPS && cd.x < pp.x+pp.dx-EPS && cd.z > pp.z-EPS && cd.z < pp.z+pp.dz-EPS){
+        var t = pp.y+pp.dy; if(t > pt) pt = t;
+      }
+    }
+    cd.pointTop = pt;
+  });
+
+  var st = {container:cont, units:units, i:0, truncated:false, placed:placed, unplaced:{},
+    cands:cands, candSet:cset, candsSorted:false,
+    minDy: units.reduce(function(m,u){ return Math.min(m,u.dy); }, Infinity)};
+  var before = placed.length;
+  while(!packStepBatch(st, 1e9)){}
+  return {added: placed.length-before, unplaced: st.unplaced};
 }
 /* PURE-END */
 
@@ -829,11 +1052,14 @@ function applyOrbit(){
   camera.lookAt(orbit.target);
 }
 
+var pieceDragActive = false;  /* true = กำลังลากชิ้นสินค้า → กล้องต้องนิ่ง */
+
 function bindOrbit(el){
   var drag = false, px = 0, py = 0, pinch = 0;
-  el.addEventListener('mousedown', function(e){ drag=true; px=e.clientX; py=e.clientY; });
+  el.addEventListener('mousedown', function(e){ if(pieceDragActive) return; drag=true; px=e.clientX; py=e.clientY; });
   window.addEventListener('mouseup', function(){ drag=false; });
   window.addEventListener('mousemove', function(e){
+    if(pieceDragActive){ drag=false; return; }
     if(!drag) return;
     orbit.theta += (e.clientX-px)*0.006;
     orbit.phi   -= (e.clientY-py)*0.006;
@@ -844,12 +1070,14 @@ function bindOrbit(el){
     orbit.dist = Math.max(1.5, Math.min(80, orbit.dist * (e.deltaY>0 ? 1.1 : 0.9)));
   }, {passive:false});
   el.addEventListener('touchstart', function(e){
+    if(pieceDragActive){ drag=false; return; }
     if(e.touches.length===1){ drag=true; px=e.touches[0].clientX; py=e.touches[0].clientY; }
     else if(e.touches.length===2){
       pinch = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
     }
   }, {passive:true});
   el.addEventListener('touchmove', function(e){
+    if(pieceDragActive){ drag=false; e.preventDefault(); return; }
     if(e.touches.length===1 && drag){
       orbit.theta += (e.touches[0].clientX-px)*0.007;
       orbit.phi   -= (e.touches[0].clientY-py)*0.007;
@@ -973,6 +1201,203 @@ function clearDim(){
 }
 
 /* ============================================================
+   โหมดแก้ไขด้วยตนเอง: เลือกชิ้นด้วยการคลิก + แผงควบคุม
+   ============================================================ */
+var selIdx = -1, raycaster = null;
+
+function selPiece(){
+  return (selIdx >= 0 && lastResult && selIdx < lastResult.placed.length)
+    ? lastResult.placed[selIdx] : null;
+}
+
+function setSelection(i){
+  meshes.forEach(function(m){ if(m.material.emissive) m.material.emissive.setHex(0x000000); });
+  selIdx = (i != null && i >= 0) ? i : -1;
+  var p = selPiece();
+  if(p && meshes[selIdx]){
+    meshes[selIdx].material.emissive.setHex(0x5A2A00);
+    var it = items[p.idx];
+    $('epName').textContent = it ? it.name : 'สินค้า';
+    $('epDims').textContent = Math.round(p.dx)+' × '+Math.round(p.dz)+' × '+Math.round(p.dy)
+      +' มม. · ห่างหัวตู้ '+Math.round(p.x)+' · ห่างซ้าย '+Math.round(p.z)+' · สูงจากพื้น '+Math.round(p.y)+' มม.';
+    $('epRotate').disabled = (p.shape==='cylinder' && p.orient!=='h');
+    $('epFlash').textContent = '';
+    $('editPanel').classList.remove('hidden');
+  }else{
+    selIdx = -1;
+    $('editPanel').classList.add('hidden');
+  }
+}
+
+function epFlash(msg){
+  $('epFlash').textContent = msg;
+  clearTimeout(epFlash._t);
+  epFlash._t = setTimeout(function(){ $('epFlash').textContent = ''; }, 3000);
+}
+
+function updatePlaceRestBtn(){
+  var n = lastResult ? sumUnplaced(lastResult.unplaced) : 0;
+  var b = $('btnPlaceRest');
+  b.classList.toggle('hidden', n === 0);
+  b.textContent = '⟲ วางชิ้นตกค้าง ('+n+')';
+}
+
+/* คำนวณสถิติ/คำเตือน/ขั้นตอนใหม่ + วาดฉากใหม่ หลังการแก้ไขด้วยมือ */
+function refreshAfterManual(action){
+  var c = lastResult.container;
+  var keep = selIdx;
+  lastResult = packFinish({
+    container:c, placed:lastResult.placed, unplaced:lastResult.unplaced,
+    truncated:lastResult.truncated,
+    units:{length: lastResult.placed.length + sumUnplaced(lastResult.unplaced)}
+  });
+  buildCargoMeshes(lastResult);
+  var sl = $('stepSlider');
+  var atMax = (+sl.value >= +sl.max);
+  sl.max = lastResult.placed.length;
+  if(atMax || +sl.value > lastResult.placed.length) sl.value = lastResult.placed.length;
+  updateStepLabel();
+  updateStats(c, lastResult);
+  updatePlaceRestBtn();
+  $('btnPdf').disabled = lastResult.placed.length === 0;
+  setSelection(keep);
+  if(action) track('manual_edit', {action:action});
+}
+
+function initPicking(canvas){
+  raycaster = new THREE.Raycaster();
+  var SNAP = 30;                 /* ระยะดูดเข้าชิดขอบ (มม.) */
+  var ds = null;                 /* สถานะการลากปัจจุบัน */
+  var dragPlane = new THREE.Plane();
+  var hitPt = new THREE.Vector3();
+
+  function ndc(e){
+    var r = canvas.getBoundingClientRect();
+    return new THREE.Vector2(((e.clientX-r.left)/r.width)*2 - 1, -((e.clientY-r.top)/r.height)*2 + 1);
+  }
+  function restoreMesh(idx){
+    var p = lastResult.placed[idx], m = meshes[idx];
+    if(!p || !m) return;
+    m.material.transparent = false; m.material.opacity = 1;
+    m.material.color.setHex(ds.baseColor);
+    m.position.set((p.x+p.dx/2)*S, (p.y+p.dy/2)*S, (p.z+p.dz/2)*S);
+  }
+
+  canvas.addEventListener('pointerdown', function(e){
+    ds = null;
+    if(!lastResult || !meshes.length) return;
+    raycaster.setFromCamera(ndc(e), camera);
+    var vis = meshes.filter(function(m){ return m.visible; });
+    var hits = raycaster.intersectObjects(vis, false);
+    if(!hits.length){
+      ds = {empty:true, sx:e.clientX, sy:e.clientY};   /* กดพื้นที่ว่าง → ปล่อยให้หมุนกล้อง */
+      return;
+    }
+    var idx = meshes.indexOf(hits[0].object);
+    var p = lastResult.placed[idx];
+    pieceDragActive = true;                             /* กดบนชิ้น → กล้องนิ่ง เตรียมลาก */
+    if(canvas.setPointerCapture){ try{ canvas.setPointerCapture(e.pointerId); }catch(err){} }
+    ds = {
+      idx:idx, sx:e.clientX, sy:e.clientY, moved:false,
+      ox:p.x, oz:p.z, oy:p.y,
+      planeY:hits[0].point.y,
+      offX:hits[0].point.x - p.x*S, offZ:hits[0].point.z - p.z*S,
+      px:p.x, pz:p.z, py:p.y, valid:true,
+      baseColor:meshes[idx].material.color.getHex()
+    };
+  });
+
+  canvas.addEventListener('pointermove', function(e){
+    if(!ds || ds.empty) return;
+    if(!ds.moved && Math.hypot(e.clientX-ds.sx, e.clientY-ds.sy) <= 6) return;
+    ds.moved = true;
+    var p = lastResult.placed[ds.idx];
+    raycaster.setFromCamera(ndc(e), camera);
+    dragPlane.set(new THREE.Vector3(0,1,0), -ds.planeY);   /* ระนาบแนวนอน ณ จุดที่จับ */
+    if(!raycaster.ray.intersectPlane(dragPlane, hitPt)) return;
+    var cont = lastResult.container;
+    var sn = dragSnap(p, (hitPt.x-ds.offX)/S, (hitPt.z-ds.offZ)/S, cont, lastResult.placed, SNAP);
+    var pv = dragPreview(p, sn.x, sn.z, cont, lastResult.placed);
+    ds.px = pv.x; ds.pz = pv.z; ds.py = pv.y; ds.valid = pv.valid;
+    var m = meshes[ds.idx];
+    m.position.set((pv.x+p.dx/2)*S, (pv.y+p.dy/2)*S, (pv.z+p.dz/2)*S);
+    m.material.transparent = true;
+    m.material.opacity = 0.8;
+    m.material.color.setHex(pv.valid ? ds.baseColor : 0xFF5B5B);   /* แดง = ปล่อยไม่ได้ */
+  });
+
+  function endDrag(e){
+    if(!ds) return;
+    if(ds.empty){
+      if(Math.hypot(e.clientX-ds.sx, e.clientY-ds.sy) <= 6) setSelection(-1);
+      ds = null; return;
+    }
+    pieceDragActive = false;
+    var idx = ds.idx;
+    if(!ds.moved){ ds = null; setSelection(idx); return; }   /* แค่คลิก = เลือก */
+    var p = lastResult.placed[idx];
+    restoreMesh(idx);
+    if(ds.valid){
+      p.x = ds.px; p.z = ds.pz;
+      reGravity(lastResult.placed);
+      selIdx = idx;
+      ds = null;
+      refreshAfterManual('drag');
+    }else{
+      ds = null;
+      setSelection(idx);
+      epFlash('ปล่อยตรงนั้นไม่ได้ (เกินเพดานตู้หรือทับชิ้นห้ามวางทับ) — ชิ้นเด้งกลับที่เดิม');
+    }
+  }
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', function(){
+    pieceDragActive = false;
+    if(ds && !ds.empty && ds.idx != null) restoreMesh(ds.idx);
+    ds = null;
+  });
+}
+
+function initEditPanel(){
+  $('epClose').onclick = function(){ setSelection(-1); };
+  $('epRotate').onclick = function(){
+    var p = selPiece(); if(!p) return;
+    var err = manualRotate(p, lastResult.container, lastResult.placed);
+    if(err){ epFlash(err); return; }
+    refreshAfterManual('rotate');
+  };
+  $('epRemove').onclick = function(){
+    var p = selPiece(); if(!p) return;
+    lastResult.placed.splice(selIdx, 1);
+    lastResult.unplaced[p.idx] = (lastResult.unplaced[p.idx]||0) + 1;
+    reGravity(lastResult.placed);
+    selIdx = -1;
+    refreshAfterManual('remove');
+  };
+  document.querySelectorAll('.ep-mv').forEach(function(b){
+    b.onclick = function(){
+      var p = selPiece(); if(!p) return;
+      manualSweep(p, b.dataset.dir, lastResult.container, lastResult.placed);
+      refreshAfterManual('sweep');
+    };
+  });
+  document.querySelectorAll('.ep-nd').forEach(function(b){
+    b.onclick = function(){
+      var p = selPiece(); if(!p) return;
+      var err = manualNudge(p, +b.dataset.mx, +b.dataset.mz, lastResult.container, lastResult.placed);
+      if(err){ epFlash(err); return; }
+      refreshAfterManual('nudge');
+    };
+  });
+  $('btnPlaceRest').onclick = function(){
+    if(!lastResult) return;
+    var res = packMoreUnits(lastResult.container, lastResult.placed, lastResult.unplaced, items);
+    lastResult.unplaced = res.unplaced;
+    refreshAfterManual('place_rest');
+    if(res.added === 0) epFlash ? alert('ยังวางเพิ่มไม่ได้ — ลองหมุน/ขยับชิ้นที่วางแล้วเพื่อเปิดพื้นที่ แล้วกดอีกครั้ง') : null;
+  };
+}
+
+/* ============================================================
    จัดเรียง + อัปเดตสถิติ
    ============================================================ */
 function runPack(){
@@ -998,6 +1423,7 @@ function runPack(){
       return;
     }
     lastResult = packFinish(st);
+    setSelection(-1);
     track('pack_cargo', {
       container: c.name,
       item_types: items.length,
@@ -1008,6 +1434,7 @@ function runPack(){
     buildContainerMesh(c);
     buildCargoMeshes(lastResult);
     updateStats(c, lastResult);
+    updatePlaceRestBtn();
 
     var sl = $('stepSlider');
     sl.max = lastResult.placed.length;
@@ -1117,6 +1544,7 @@ function pageHeader(ctx, title, sub, pageNo, pageTotal){
 
 async function exportPDF(){
   if(!lastResult || lastResult.placed.length===0) return;
+  setSelection(-1);
   var btn = $('btnPdf');
   btn.disabled = true; btn.textContent = 'กำลังสร้าง PDF…';
   var c = getContainer();
@@ -1328,8 +1756,20 @@ async function exportPDF(){
 /* ============================================================
    ประวัติการอัปเดต — เพิ่มรายการใหม่ไว้บนสุดทุกครั้งที่ปล่อยเวอร์ชัน
    ============================================================ */
-var APP_VER = '1.4';
+var APP_VER = '1.6';
 var CHANGELOG = [
+  {ver:'1.6', date:'ต.ค. 2569', items:[
+    'ลากวางชิ้นสินค้าได้โดยตรงในภาพ 3 มิติ — กดค้างบนชิ้นแล้วลาก (กดพื้นที่ว่างยังหมุนมุมมองตามเดิม)',
+    'ระหว่างลากเห็นพรีวิวตำแหน่งจริงตามแรงโน้มถ่วง ชิ้นย้อมแดงเมื่อปล่อยไม่ได้ และเด้งกลับที่เดิมอัตโนมัติ',
+    'ระบบดูดเข้าชิด (snap) อัตโนมัติเมื่อขอบชิ้นเข้าใกล้ผนังตู้หรือชิ้นข้างเคียงในระยะ 30 มม.',
+    'แผงปุ่ม (ชิดจนสุด/ขยับ 50 มม.) ยังอยู่ครบ ใช้เก็บงานละเอียดคู่กับการลาก'
+  ]},
+  {ver:'1.5', date:'ต.ค. 2569', items:[
+    'โหมดแก้ไขด้วยตนเอง: คลิกชิ้นในภาพ 3 มิติ เพื่อหมุน 90° ขยับทีละ 50 มม. เลื่อนชิดผนัง/ชิ้นข้างเคียง หรือเอาชิ้นออก',
+    'ปุ่ม "วางชิ้นตกค้าง" — ลองวางชิ้นที่เหลือเพิ่มหลังจัดมือ โดยไม่ขยับชิ้นที่วางแล้ว',
+    'รองรับการจัดแบบ interlock ที่อัลกอริทึมอัตโนมัติหาไม่เจอ เช่น พาเลท 1000×1200 ในตู้ 20 ฟุต ครบ 10 ใบ',
+    'ทุกการแก้มือยังตรวจการชน แรงโน้มถ่วง และคำเตือนความปลอดภัยให้อัตโนมัติ'
+  ]},
   {ver:'1.4', date:'ส.ค. 2569', items:[
     'ปรับปรุงอัลกอริทึมให้เร็วขึ้นราว 20 เท่า — แก้ปัญหาหน้าค้าง (Page Unresponsive) เมื่อจำนวนชิ้นมาก',
     'ขยายขีดจำกัดการคำนวณจาก 700 เป็น 2,000 ชิ้น',
@@ -1403,10 +1843,17 @@ window.addEventListener('load', function(){
   initForm();
   renderItemRows();
   initThree();
+  initPicking($('c3d'));
+  initEditPanel();
   $('btnPack').onclick = runPack;
   $('btnPdf').onclick = exportPDF;
   $('btnView').onclick = function(){
-    if(lastResult){ buildContainerMesh(getContainer()); buildCargoMeshes(lastResult); setVisibleCount(+$('stepSlider').value); }
+    if(lastResult){
+      setSelection(-1);
+      buildContainerMesh(lastResult.container);
+      buildCargoMeshes(lastResult);
+      setVisibleCount(+$('stepSlider').value);
+    }
   };
   $('stepSlider').oninput = updateStepLabel;
   $('hint').textContent = 'กด "จัดเรียงสินค้า" เพื่อเริ่มคำนวณ';
