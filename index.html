@@ -276,6 +276,12 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
 
   <section>
     <div class="sec-title">2 · รายการสินค้า</div>
+    <label for="sortMode">ลำดับการจัดเรียง</label>
+    <select id="sortMode">
+      <option value="auto">อัตโนมัติ — ของหนักอยู่ล่าง/ในสุด (แนะนำ)</option>
+      <option value="entry">ตามลำดับรายการ บน → ล่าง</option>
+    </select>
+    <div class="dim-note" id="sortNote"></div>
     <table class="item-table"><tbody id="itemRows"></tbody></table>
   </section>
 
@@ -449,7 +455,7 @@ var BOX_PRESETS = [
   {name:'ม้วนฟิล์ม/ท่อ วางนอน (Ø30×120 ซม.)', shape:'cylinder', orient:'h', dia:300, h:1200, weight:25}
 ];
 
-var MAX_UNITS = 2000;  /* เพดานจำนวนชิ้น (อัลกอริทึมเวอร์ชันปรับปรุงรองรับได้ในเวลาไม่กี่วินาที) */
+var MAX_UNITS = 5000;  /* เพดานจำนวนชิ้น — ส่วนที่เกินความจุตู้ถูกตัดเป็นตกค้างทันทีด้วย early-stop จึงรับจำนวนสูงได้ */
 var EPS = 0.5;
 
 function _ovXZ(ax,az,adx,adz, b){          /* พื้นที่ทับซ้อนบนระนาบพื้น */
@@ -490,7 +496,7 @@ function _tryPlace(cx, cz, dx, dz, dy, cont, placed){
 
 /* ---------- โครงสร้างคำนวณแบบแบ่งงวด (ป้องกันเบราว์เซอร์ค้าง) ----------
    packInit → packStepBatch (เรียกซ้ำจนเสร็จ) → packFinish                */
-function packInit(container, items){
+function packInit(container, items, opts){
   var units = [], truncated = false;
   items.forEach(function(it, idx){
     var horiz = (it.shape==='cylinder' && it.orient==='h');
@@ -509,13 +515,17 @@ function packInit(container, items){
     }
   });
 
-  /* ของหนักลงก่อน (อยู่ล่าง/ในสุด) → ปริมาตรใหญ่ก่อน */
-  units.sort(function(a,b){
-    return (b.weight-a.weight) || (b.dx*b.dy*b.dz - a.dx*a.dy*a.dz) || (a.idx-b.idx);
-  });
+  /* โหมดลำดับ: auto = ของหนักลงก่อน (อยู่ล่าง/ในสุด) → ปริมาตรใหญ่ก่อน
+     entry = คงลำดับตามรายการที่กรอก (บน→ล่าง) สำหรับงานที่ลำดับโหลดสำคัญ */
+  var order = (opts && opts.order) === 'entry' ? 'entry' : 'auto';
+  if(order === 'auto'){
+    units.sort(function(a,b){
+      return (b.weight-a.weight) || (b.dx*b.dy*b.dz - a.dx*a.dy*a.dz) || (a.idx-b.idx);
+    });
+  }
 
   return {
-    container:container, units:units, i:0, truncated:truncated,
+    container:container, units:units, i:0, truncated:truncated, order:order,
     placed:[], unplaced:{},
     /* pointTop = ความสูงกองสินค้า ณ จุด candidate (แคชไว้เพื่อข้ามจุดที่เต็มเพดานทันที) */
     cands:[{x:0, z:0, pointTop:0}], candSet:{'0_0':1}, candsSorted:true,
@@ -529,6 +539,14 @@ function packStepBatch(state, batch){
 
   for(; state.i < end; state.i++){
     var u = state.units[state.i];
+
+    /* Early-stop: ชิ้นขนาดเดียวกันเป๊ะที่เพิ่งค้นแล้ววางไม่ลง และยังไม่มีการวางชิ้นใดเพิ่ม
+       สภาพตู้ไม่เปลี่ยน → ผลค้นย่อมเหมือนเดิม ตัดเป็นตกค้างทันที (ทำให้จำนวนชิ้นมหาศาลไม่หน่วงเครื่อง) */
+    var fkey = u.dx+'_'+u.dz+'_'+u.dy+'_'+(u.rotatable?1:0);
+    if(state.failKey === fkey){
+      state.unplaced[u.idx] = (state.unplaced[u.idx]||0) + 1;
+      continue;
+    }
 
     /* เรียง candidate ตาม x เพื่อตัดการค้นหา และคัดจุดที่กองเต็มเพดานทิ้ง:
        เมื่อได้ตำแหน่งที่ x ต่ำแล้ว candidate ที่ x สูงกว่าย่อมแพ้เสมอ (เกณฑ์ x → y → z) */
@@ -560,6 +578,7 @@ function packStepBatch(state, batch){
       }
     }
     if(best){
+      state.failKey = null;   /* สภาพตู้เปลี่ยน — เปิดให้ชนิดที่เคยวางไม่ลงได้ลองใหม่ */
       best.idx = u.idx; best.shape = u.shape; best.weight = u.weight;
       best.noStack = u.noStack; best.orient = u.orient;
       best.axis = (u.shape==='cylinder' && u.orient==='h') ? (best._rot===1 ? 'z' : 'x') : null;
@@ -597,6 +616,7 @@ function packStepBatch(state, batch){
         }
       });
     }else{
+      state.failKey = fkey;
       state.unplaced[u.idx] = (state.unplaced[u.idx]||0) + 1;
     }
   }
@@ -640,17 +660,19 @@ function packFinish(state){
   });
   var cvol = container.L*container.W*container.H;
 
-  /* แบ่งขั้นตอนโหลด: ชนิดเดียวกันติดกัน = ขั้นเดียว (สูงสุด 16 ชิ้น/ขั้น) */
+  /* แบ่งขั้นตอนโหลด: ชนิดเดียวกันติดกัน = ขั้นเดียว
+     ขนาดขั้นปรับตามจำนวนชิ้น เพื่อให้ PDF ไม่เกินราว 60 ขั้นแม้ชิ้นหลักพัน */
+  var maxPer = Math.max(16, Math.ceil(placed.length/60));
   var steps = [];
   placed.forEach(function(p, i){
     var last = steps[steps.length-1];
-    if(!last || last.idx !== p.idx || (i - last.from) >= 16){
+    if(!last || last.idx !== p.idx || (i - last.from) >= maxPer){
       steps.push({idx:p.idx, from:i, to:i+1});
     }else last.to = i+1;
   });
 
   return {
-    container:container,
+    container:container, order:state.order || 'auto',
     placed:placed, steps:steps, unplaced:state.unplaced, truncated:state.truncated,
     totalWeight:wt, utilization: cvol>0 ? vol/cvol : 0,
     totalUnits:state.units.length, hcylStack:hcylStack, vcylStack:vcylStack
@@ -658,8 +680,8 @@ function packFinish(state){
 }
 
 /* เวอร์ชันเรียกครั้งเดียวจบ (ใช้ทดสอบ/งานเบา) */
-function packCargo(container, items){
-  var st = packInit(container, items);
+function packCargo(container, items, opts){
+  var st = packInit(container, items, opts);
   while(!packStepBatch(st, 1e9)){}
   return packFinish(st);
 }
@@ -793,7 +815,7 @@ function dragPreview(p, nx, nz, cont, placed){
 }
 
 /* ลองวางชิ้นตกค้างเพิ่ม โดยไม่ขยับชิ้นที่วางอยู่แล้ว */
-function packMoreUnits(cont, placed, unplaced, items){
+function packMoreUnits(cont, placed, unplaced, items, order){
   var units = [];
   Object.keys(unplaced).forEach(function(k){
     var it = items[+k]; if(!it || !unplaced[k]) return;
@@ -808,9 +830,11 @@ function packMoreUnits(cont, placed, unplaced, items){
     }
   });
   if(!units.length) return {added:0, unplaced:unplaced};
-  units.sort(function(a,b){
-    return (b.weight-a.weight) || (b.dx*b.dy*b.dz - a.dx*a.dy*a.dz) || (a.idx-b.idx);
-  });
+  if(order !== 'entry'){
+    units.sort(function(a,b){
+      return (b.weight-a.weight) || (b.dx*b.dy*b.dz - a.dx*a.dy*a.dz) || (a.idx-b.idx);
+    });
+  }
 
   /* สร้าง candidate จากมุมของชิ้นที่วางอยู่ แล้วหา pointTop ของแต่ละจุด */
   var cset = {'0_0':1}, cands = [{x:0, z:0, pointTop:0}];
@@ -943,11 +967,27 @@ function renderItemRows(){
       '<td style="width:20px"><span class="dot" style="background:'+it.color+'"></span></td>' +
       '<td><div class="nm">'+it.name+'</div><div class="dm">'+dims+' · '+it.weight+' กก./ชิ้น</div><div>'+tags+'</div></td>' +
       '<td style="text-align:right; white-space:nowrap"><b>'+it.qty+'</b> ชิ้น</td>' +
-      '<td style="width:28px"><button class="del" title="ลบ" data-i="'+i+'">✕</button></td>';
+      '<td style="width:52px; white-space:nowrap">' +
+        '<button class="del mvup" title="เลื่อนขึ้น" data-i="'+i+'">▲</button>' +
+        '<button class="del mvdn" title="เลื่อนลง" data-i="'+i+'">▼</button>' +
+      '</td>' +
+      '<td style="width:28px"><button class="del rm" title="ลบ" data-i="'+i+'">✕</button></td>';
     tb.appendChild(tr);
   });
-  tb.querySelectorAll('.del').forEach(function(b){
+  tb.querySelectorAll('.rm').forEach(function(b){
     b.onclick = function(){ items.splice(+b.dataset.i, 1); renderItemRows(); };
+  });
+  tb.querySelectorAll('.mvup').forEach(function(b){
+    b.onclick = function(){
+      var i = +b.dataset.i;
+      if(i > 0){ var tmp = items[i-1]; items[i-1] = items[i]; items[i] = tmp; renderItemRows(); }
+    };
+  });
+  tb.querySelectorAll('.mvdn').forEach(function(b){
+    b.onclick = function(){
+      var i = +b.dataset.i;
+      if(i < items.length-1){ var tmp = items[i+1]; items[i+1] = items[i]; items[i] = tmp; renderItemRows(); }
+    };
   });
 }
 
@@ -1148,30 +1188,34 @@ function buildCargoMeshes(result){
   if(cargoGroup) scene.remove(cargoGroup);
   cargoGroup = new THREE.Group();
   meshes = [];
+  var many = result.placed.length > 1500;          /* ชิ้นเยอะมาก: ตัดเส้นขอบเพื่อความลื่น */
+  var seg = result.placed.length > 800 ? 12 : 24;   /* ลดความละเอียดทรงกระบอกเมื่อชิ้นเยอะ */
   result.placed.forEach(function(p){
     var col = new THREE.Color(items[p.idx] ? items[p.idx].color : '#888888');
     var geo, mesh;
     if(p.shape==='cylinder' && p.orient==='h'){
       var len = (p.axis==='z' ? p.dz : p.dx);
-      geo = new THREE.CylinderGeometry(p.dy*S/2*0.98, p.dy*S/2*0.98, len*S*0.985, 24);
+      geo = new THREE.CylinderGeometry(p.dy*S/2*0.98, p.dy*S/2*0.98, len*S*0.985, seg);
       mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:col}));
       /* แกนทรงกระบอกเริ่มที่แนวตั้ง (Y) — หมุนให้นอนตามแกนที่วาง */
       if(p.axis==='z') mesh.rotation.x = Math.PI/2;
       else mesh.rotation.z = Math.PI/2;
     }else if(p.shape==='cylinder'){
-      geo = new THREE.CylinderGeometry(p.dx*S/2*0.98, p.dx*S/2*0.98, p.dy*S*0.985, 24);
+      geo = new THREE.CylinderGeometry(p.dx*S/2*0.98, p.dx*S/2*0.98, p.dy*S*0.985, seg);
       mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:col}));
     }else{
       geo = new THREE.BoxGeometry(p.dx*S*0.985, p.dy*S*0.985, p.dz*S*0.985);
       mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:col}));
     }
     mesh.position.set((p.x+p.dx/2)*S, (p.y+p.dy/2)*S, (p.z+p.dz/2)*S);
-    var eg = new THREE.LineSegments(
-      new THREE.EdgesGeometry(geo),
-      new THREE.LineBasicMaterial({color:0x10161E, transparent:true, opacity:0.55})
-    );
-    mesh.add(eg);
-    mesh.userData.edge = eg;
+    if(!many){
+      var eg = new THREE.LineSegments(
+        new THREE.EdgesGeometry(geo),
+        new THREE.LineBasicMaterial({color:0x10161E, transparent:true, opacity:0.55})
+      );
+      mesh.add(eg);
+      mesh.userData.edge = eg;
+    }
     cargoGroup.add(mesh);
     meshes.push(mesh);
   });
@@ -1188,7 +1232,7 @@ function setDimRange(from, to){ /* ชิ้นก่อนหน้า from = �
     var dim = i < from;
     m.material.transparent = dim;
     m.material.opacity = dim ? 0.22 : 1;
-    m.userData.edge.material.opacity = dim ? 0.1 : 0.55;
+    if(m.userData.edge) m.userData.edge.material.opacity = dim ? 0.1 : 0.55;
   });
 }
 
@@ -1196,7 +1240,7 @@ function clearDim(){
   meshes.forEach(function(m){
     m.material.transparent = false;
     m.material.opacity = 1;
-    m.userData.edge.material.opacity = 0.55;
+    if(m.userData.edge) m.userData.edge.material.opacity = 0.55;
   });
 }
 
@@ -1248,7 +1292,7 @@ function refreshAfterManual(action){
   var keep = selIdx;
   lastResult = packFinish({
     container:c, placed:lastResult.placed, unplaced:lastResult.unplaced,
-    truncated:lastResult.truncated,
+    truncated:lastResult.truncated, order:lastResult.order,
     units:{length: lastResult.placed.length + sumUnplaced(lastResult.unplaced)}
   });
   buildCargoMeshes(lastResult);
@@ -1390,7 +1434,7 @@ function initEditPanel(){
   });
   $('btnPlaceRest').onclick = function(){
     if(!lastResult) return;
-    var res = packMoreUnits(lastResult.container, lastResult.placed, lastResult.unplaced, items);
+    var res = packMoreUnits(lastResult.container, lastResult.placed, lastResult.unplaced, items, lastResult.order);
     lastResult.unplaced = res.unplaced;
     refreshAfterManual('place_rest');
     if(res.added === 0) epFlash ? alert('ยังวางเพิ่มไม่ได้ — ลองหมุน/ขยับชิ้นที่วางแล้วเพื่อเปิดพื้นที่ แล้วกดอีกครั้ง') : null;
@@ -1409,7 +1453,7 @@ function runPack(){
 
   /* คำนวณทีละงวดผ่าน setTimeout เพื่อให้หน้าจอตอบสนองและแสดงความคืบหน้าได้
      (แก้ปัญหาเบราว์เซอร์ขึ้น Page Unresponsive เมื่อจำนวนชิ้นมาก) */
-  var st = packInit(c, items);
+  var st = packInit(c, items, {order: $('sortMode').value});
   var total = Math.max(1, st.units.length);
   (function loop(){
     var t0 = Date.now();
@@ -1426,6 +1470,7 @@ function runPack(){
     setSelection(-1);
     track('pack_cargo', {
       container: c.name,
+      order_mode: lastResult.order,
       item_types: items.length,
       total_units: lastResult.totalUnits,
       placed_units: lastResult.placed.length,
@@ -1465,7 +1510,17 @@ function updateStats(c, r){
   var un = Object.keys(r.unplaced);
   var warn = [];
   if(un.length){
-    warn.push('วางไม่ได้: ' + un.map(function(k){ return (items[k]?items[k].name:'?')+' '+r.unplaced[k]+' ชิ้น'; }).join(', ') + ' — พื้นที่ตู้ไม่พอหรือขนาดชิ้นเกินตู้ · แนะนำ: เปลี่ยนเป็นตู้/รถขนาดใหญ่ขึ้น ติ๊กอนุญาตให้หมุน หรือแบ่งส่งหลายเที่ยว');
+    var leftVol = 0;
+    un.forEach(function(k){
+      var it = items[k];
+      if(it){
+        var v = it.shape==='cylinder' ? Math.PI/4*it.dia*it.dia*it.h : it.l*it.w*it.h;
+        leftVol += v * r.unplaced[k];
+      }
+    });
+    warn.push('พื้นที่ตู้ไม่พอ — วางได้ '+r.placed.length+' / '+r.totalUnits+' ชิ้น · ตกค้าง: '
+      + un.map(function(k){ return (items[k]?items[k].name:'?')+' '+r.unplaced[k]+' ชิ้น'; }).join(', ')
+      + ' (ปริมาตรที่ขาดราว '+(leftVol/1e9).toFixed(1)+' ลบ.ม.) · แนะนำ: ใช้ตู้/รถใหญ่ขึ้น เพิ่มคัน หรือแบ่งรอบส่ง');
   }
   if(wPct>100) warn.push('น้ำหนักเกินพิกัดบรรทุก!');
   if(r.hcylStack>0) warn.push('มีการวางสินค้าทับทรงกระบอกแนวนอน '+r.hcylStack+' จุด — หน้างานต้องใช้ไม้หมอน/ลิ่มกันกลิ้งรองรับ');
@@ -1756,8 +1811,14 @@ async function exportPDF(){
 /* ============================================================
    ประวัติการอัปเดต — เพิ่มรายการใหม่ไว้บนสุดทุกครั้งที่ปล่อยเวอร์ชัน
    ============================================================ */
-var APP_VER = '1.6';
+var APP_VER = '1.7';
 var CHANGELOG = [
+  {ver:'1.7', date:'ต.ค. 2569', items:[
+    'ขยายขีดจำกัดจาก 2,000 เป็น 5,000 ชิ้น — ส่วนที่เกินความจุตู้ถูกสรุปเป็นรายการตกค้างทันที ไม่หน่วงเครื่อง',
+    'แจ้งชัดเจนว่าอะไรไม่พอ: ระบุชื่อสินค้า จำนวนชิ้นที่ตกค้าง และปริมาตรพื้นที่ที่ขาด (ลบ.ม.)',
+    'เพิ่มโหมด "จัดตามลำดับรายการ" พร้อมปุ่ม ▲▼ จัดลำดับสินค้า — เหมาะกับงานเรียงตามจุดส่ง (โหมดอัตโนมัติของหนักอยู่ล่างยังเป็นค่าเริ่มต้น)',
+    'ภาพ 3 มิติลื่นขึ้นเมื่อชิ้นจำนวนมาก และ PDF คุมจำนวนขั้นตอนไม่ให้บานตามจำนวนชิ้น'
+  ]},
   {ver:'1.6', date:'ต.ค. 2569', items:[
     'ลากวางชิ้นสินค้าได้โดยตรงในภาพ 3 มิติ — กดค้างบนชิ้นแล้วลาก (กดพื้นที่ว่างยังหมุนมุมมองตามเดิม)',
     'ระหว่างลากเห็นพรีวิวตำแหน่งจริงตามแรงโน้มถ่วง ชิ้นย้อมแดงเมื่อปล่อยไม่ได้ และเด้งกลับที่เดิมอัตโนมัติ',
@@ -1841,6 +1902,13 @@ window.addEventListener('load', function(){
   initContainerSel();
   initBoxPresetSel();
   initForm();
+  var syncSortNote = function(){
+    $('sortNote').textContent = $('sortMode').value === 'entry'
+      ? '⚠ โหมดนี้วางตามลำดับรายการ (ใช้ปุ่ม ▲▼ จัดลำดับ) เหมาะกับงานเรียงตามจุดส่ง — จะไม่บังคับกฎของหนักอยู่ล่าง โปรดตรวจความมั่นคงเอง'
+      : 'โปรแกรมเรียงของหนัก/ชิ้นใหญ่ลงก่อน เพื่อให้อยู่ชั้นล่างและลึกสุดของตู้';
+  };
+  $('sortMode').onchange = syncSortNote;
+  syncSortNote();
   renderItemRows();
   initThree();
   initPicking($('c3d'));
