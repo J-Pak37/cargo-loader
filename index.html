@@ -15,7 +15,11 @@ gtag('js', new Date());
 gtag('config', 'G-WLZZ7YNPKK');
 /* ยิง event แบบปลอดภัย — ถ้า GA ถูกบล็อก โปรแกรมยังทำงานปกติ */
 function track(name, params){
-  try{ gtag('event', name, params || {}); }catch(e){}
+  try{
+    params = params || {};
+    params.lang = window.APP_LANG || 'th';
+    gtag('event', name, params);
+  }catch(e){}
 }
 </script>
 <style>
@@ -244,12 +248,13 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
   <img class="logo-img" id="chLogo" alt="โลโก้ช่อง คุยกับไออี">
   <div>
     <h1>CARGO LOADER <span>3D</span><span class="ver-badge" id="verBadge" title="ดูประวัติการอัปเดต"><span class="ver-dot"></span><span id="verText">v1.0</span></span></h1>
-    <div class="by">โดยช่อง <b>คุยกับไออี</b> · โปรแกรมวางแผนจัดเรียงสินค้าเข้าตู้ / ขึ้นรถบรรทุก</div>
+    <div class="by" data-i18n="hd_by">โดยช่อง คุยกับไออี · โปรแกรมวางแผนจัดเรียงสินค้าเข้าตู้ / ขึ้นรถบรรทุก</div>
   </div>
   <div class="links">
-    <a class="link-btn link-yt" href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener" onclick="track('click_youtube',{location:'header'})">▶ ติดตามช่อง คุยกับไออี</a>
-    <a class="link-btn link-fb" href="https://drive.google.com/file/d/1zqXQWT4lEB8d15jIQ7V3hWoiiBrvjMdT/view?usp=sharing" target="_blank" rel="noopener" onclick="track('click_manual',{location:'header'})">📖 คู่มือการใช้งาน</a>
-    <a class="link-btn link-fb" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'header'})">✎ แบบสอบถามฟีดแบ็ค</a>
+    <a class="link-btn link-yt" href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener" onclick="track('click_youtube',{location:'header'})"><span data-i18n="hd_yt">▶ ติดตามช่อง คุยกับไออี</span></a>
+    <a class="link-btn link-fb" href="https://drive.google.com/file/d/1zqXQWT4lEB8d15jIQ7V3hWoiiBrvjMdT/view?usp=sharing" target="_blank" rel="noopener" onclick="track('click_manual',{location:'header'})"><span data-i18n="hd_manual">📖 คู่มือการใช้งาน</span></a>
+    <a class="link-btn link-fb" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'header'})"><span data-i18n="hd_fb">✎ แบบสอบถามฟีดแบ็ค</span></a>
+    <button class="link-btn link-fb" id="langBtn" title="Switch language">EN</button>
   </div>
 </header>
 
@@ -258,73 +263,73 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
 <aside>
 
   <section>
-    <div class="sec-title">1 · ตู้ / รถบรรทุก</div>
-    <label for="containerSel">เลือกประเภท</label>
+    <div class="sec-title" data-i18n="s1">1 · ตู้ / รถบรรทุก</div>
+    <label for="containerSel" data-i18n="s1_type">เลือกประเภท</label>
     <select id="containerSel"></select>
     <div id="customContainer" class="hidden">
       <div class="row">
-        <div><label>ยาวภายใน (มม.)</label><input type="number" id="ccL" value="6000" min="100"></div>
-        <div><label>กว้างภายใน (มม.)</label><input type="number" id="ccW" value="2200" min="100"></div>
+        <div><label data-i18n="s1_l">ยาวภายใน (มม.)</label><input type="number" id="ccL" value="6000" min="100"></div>
+        <div><label data-i18n="s1_w">กว้างภายใน (มม.)</label><input type="number" id="ccW" value="2200" min="100"></div>
       </div>
       <div class="row">
-        <div><label>สูงภายใน (มม.)</label><input type="number" id="ccH" value="2200" min="100"></div>
-        <div><label>น้ำหนักบรรทุก (กก.)</label><input type="number" id="ccP" value="8000" min="1"></div>
+        <div><label data-i18n="s1_h">สูงภายใน (มม.)</label><input type="number" id="ccH" value="2200" min="100"></div>
+        <div><label data-i18n="s1_p">น้ำหนักบรรทุก (กก.)</label><input type="number" id="ccP" value="8000" min="1"></div>
       </div>
     </div>
     <div class="dim-note" id="containerInfo"></div>
   </section>
 
   <section>
-    <div class="sec-title">2 · รายการสินค้า</div>
-    <label for="sortMode">ลำดับการจัดเรียง</label>
+    <div class="sec-title" data-i18n="s2">2 · รายการสินค้า</div>
+    <label for="sortMode" data-i18n="s2_order">ลำดับการจัดเรียง</label>
     <select id="sortMode">
-      <option value="auto">อัตโนมัติ — ของหนักอยู่ล่าง/ในสุด (แนะนำ)</option>
-      <option value="entry">ตามลำดับรายการ บน → ล่าง</option>
+      <option value="auto" data-i18n="s2_auto">อัตโนมัติ — ของหนักอยู่ล่าง/ในสุด (แนะนำ)</option>
+      <option value="entry" data-i18n="s2_entry">ตามลำดับรายการ บน → ล่าง</option>
     </select>
     <div class="dim-note" id="sortNote"></div>
     <table class="item-table"><tbody id="itemRows"></tbody></table>
   </section>
 
   <section>
-    <div class="sec-title">3 · เพิ่มสินค้า</div>
-    <label>เลือกจากคลังมาตรฐาน (ไม่บังคับ)</label>
+    <div class="sec-title" data-i18n="s3">3 · เพิ่มสินค้า</div>
+    <label data-i18n="s3_lib">เลือกจากคลังมาตรฐาน (ไม่บังคับ)</label>
     <select id="boxPresetSel"></select>
-    <label>ชื่อสินค้า</label>
-    <input type="text" id="fName" placeholder="เช่น กล่องสินค้า A">
+    <label data-i18n="s3_name">ชื่อสินค้า</label>
+    <input type="text" id="fName" data-i18n-ph="s3_ph" placeholder="เช่น กล่องสินค้า A">
     <div class="row">
       <div>
-        <label>รูปทรง</label>
+        <label data-i18n="s3_shape">รูปทรง</label>
         <select id="fShape">
-          <option value="box">กล่องสี่เหลี่ยม</option>
-          <option value="cyl_v">ทรงกระบอก — วางตั้ง (ถัง, ดรัม)</option>
-          <option value="cyl_h">ทรงกระบอก — วางนอน (ม้วน, ท่อ)</option>
+          <option value="box" data-i18n="sh_box">กล่องสี่เหลี่ยม</option>
+          <option value="cyl_v" data-i18n="sh_cv">ทรงกระบอก — วางตั้ง (ถัง, ดรัม)</option>
+          <option value="cyl_h" data-i18n="sh_ch">ทรงกระบอก — วางนอน (ม้วน, ท่อ)</option>
         </select>
       </div>
       <div>
-        <label>สี</label>
+        <label data-i18n="s3_color">สี</label>
         <input type="color" id="fColor" value="#3D8BFF">
       </div>
     </div>
     <div id="boxDims">
       <div class="row">
-        <div><label>ยาว (มม.)</label><input type="number" id="fL" value="600" min="1"></div>
-        <div><label>กว้าง (มม.)</label><input type="number" id="fW" value="400" min="1"></div>
-        <div><label>สูง (มม.)</label><input type="number" id="fH" value="400" min="1"></div>
+        <div><label data-i18n="s3_bl">ยาว (มม.)</label><input type="number" id="fL" value="600" min="1"></div>
+        <div><label data-i18n="s3_bw">กว้าง (มม.)</label><input type="number" id="fW" value="400" min="1"></div>
+        <div><label data-i18n="s3_bh">สูง (มม.)</label><input type="number" id="fH" value="400" min="1"></div>
       </div>
     </div>
     <div id="cylDims" class="hidden">
       <div class="row">
-        <div><label>เส้นผ่านศูนย์กลาง (มม.)</label><input type="number" id="fDia" value="580" min="1"></div>
+        <div><label data-i18n="s3_dia">เส้นผ่านศูนย์กลาง (มม.)</label><input type="number" id="fDia" value="580" min="1"></div>
         <div><label id="fCHLabel">สูง (มม.)</label><input type="number" id="fCH" value="900" min="1"></div>
       </div>
     </div>
     <div class="row">
-      <div><label>น้ำหนัก/ชิ้น (กก.)</label><input type="number" id="fWt" value="10" min="0" step="0.1"></div>
-      <div><label>จำนวน (ชิ้น)</label><input type="number" id="fQty" value="10" min="1"></div>
+      <div><label data-i18n="s3_wt">น้ำหนัก/ชิ้น (กก.)</label><input type="number" id="fWt" value="10" min="0" step="0.1"></div>
+      <div><label data-i18n="s3_qty">จำนวน (ชิ้น)</label><input type="number" id="fQty" value="10" min="1"></div>
     </div>
     <label class="chk" id="rotWrap"><input type="checkbox" id="fRot" checked> <span id="rotLabel">อนุญาตให้หมุนแนวนอนได้ (สลับกว้าง–ยาว)</span></label>
-    <label class="chk"><input type="checkbox" id="fNoStack"> ห้ามวางสินค้าอื่นทับด้านบน</label>
-    <button class="btn btn-add" id="btnAdd">＋ เพิ่มเข้ารายการ</button>
+    <label class="chk"><input type="checkbox" id="fNoStack"> <span data-i18n="s3_nostack">ห้ามวางสินค้าอื่นทับด้านบน</span></label>
+    <button class="btn btn-add" id="btnAdd" data-i18n="s3_add">＋ เพิ่มเข้ารายการ</button>
   </section>
 
   <section>
@@ -332,13 +337,13 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
       <img id="chLogo2" alt="โลโก้ช่อง คุยกับไออี">
       <div>
         <div class="cc-name">คุยกับไออี — Talk with IE</div>
-        <div class="cc-desc">แจกฟรีเครื่องมือดิจิทัลสำหรับโรงงาน SME · ถ้าโปรแกรมนี้มีประโยชน์ ฝากติดตามช่องและส่งฟีดแบ็คให้ด้วยนะครับ</div>
+        <div class="cc-desc" data-i18n="cc_desc">แจกฟรีเครื่องมือดิจิทัลสำหรับโรงงาน SME · ถ้าโปรแกรมนี้มีประโยชน์ ฝากติดตามช่องและส่งฟีดแบ็คให้ด้วยนะครับ</div>
         <a href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener" onclick="track('click_youtube',{location:'sidebar'})">▶ YouTube</a>
-        <a href="https://drive.google.com/file/d/1zqXQWT4lEB8d15jIQ7V3hWoiiBrvjMdT/view?usp=sharing" target="_blank" rel="noopener" onclick="track('click_manual',{location:'sidebar'})">📖 คู่มือ</a>
-        <a href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'sidebar'})">✎ ส่งฟีดแบ็ค</a>
+        <a href="https://drive.google.com/file/d/1zqXQWT4lEB8d15jIQ7V3hWoiiBrvjMdT/view?usp=sharing" target="_blank" rel="noopener" onclick="track('click_manual',{location:'sidebar'})"><span data-i18n="cc_manual">📖 คู่มือ</span></a>
+        <a href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'sidebar'})"><span data-i18n="cc_fb">✎ ส่งฟีดแบ็ค</span></a>
       </div>
     </div>
-    <div class="dim-note" style="margin-top:8px">
+    <div class="dim-note" style="margin-top:8px" data-i18n="pdpa">
       เว็บนี้เก็บสถิติการใช้งานแบบไม่ระบุตัวตน (Google Analytics) เพื่อนำไปพัฒนาโปรแกรม · ข้อมูลสินค้าที่คุณกรอกประมวลผลในเครื่องของคุณเท่านั้น ไม่ถูกส่งออกไปที่ใด
     </div>
   </section>
@@ -348,13 +353,13 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
 <!-- ================= MAIN ================= -->
 <main>
   <div class="toolbar">
-    <button class="btn btn-accent" id="btnPack">▶ จัดเรียงสินค้า</button>
-    <button class="btn btn-ghost" id="btnPdf" disabled>⬇ ส่งออก PDF ทีละขั้นตอน</button>
-    <button class="btn btn-ghost" id="btnView">รีเซ็ตมุมมอง</button>
+    <button class="btn btn-accent" id="btnPack" data-i18n="tb_pack">▶ จัดเรียงสินค้า</button>
+    <button class="btn btn-ghost" id="btnPdf" disabled data-i18n="tb_pdf">⬇ ส่งออก PDF ทีละขั้นตอน</button>
+    <button class="btn btn-ghost" id="btnView" data-i18n="tb_view">รีเซ็ตมุมมอง</button>
     <button class="btn btn-ghost hidden" id="btnPlaceRest">⟲ วางชิ้นตกค้าง</button>
-    <span class="tool-tip">💡 คลิกชิ้น = เลือก · ลากชิ้น = ย้าย</span>
+    <span class="tool-tip" data-i18n="tb_tip">💡 คลิกชิ้น = เลือก · ลากชิ้น = ย้าย</span>
     <div class="step-wrap">
-      <label for="stepSlider">ดูทีละชิ้น</label>
+      <label for="stepSlider" data-i18n="tb_step">ดูทีละชิ้น</label>
       <input type="range" id="stepSlider" min="0" max="0" value="0" disabled>
       <span id="stepLabel">– / –</span>
     </div>
@@ -367,43 +372,43 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
       <div class="ep-head"><b id="epName"></b><button class="cl-close" id="epClose" title="ปิด">✕</button></div>
       <div class="ep-dims" id="epDims"></div>
       <div class="ep-row">
-        <button class="btn btn-ghost" id="epRotate">⟳ หมุน 90°</button>
-        <button class="btn btn-ghost" id="epRemove">🗑 เอาออก</button>
+        <button class="btn btn-ghost" id="epRotate" data-i18n="ep_rot">⟳ หมุน 90°</button>
+        <button class="btn btn-ghost" id="epRemove" data-i18n="ep_rm">🗑 เอาออก</button>
       </div>
-      <div class="ep-lb">เลื่อนชิดจนสุด</div>
+      <div class="ep-lb" data-i18n="ep_snaplb">เลื่อนชิดจนสุด</div>
       <div class="ep-row">
-        <button class="btn btn-ghost ep-mv" data-dir="x-">⇤ ชิดหัวตู้</button>
-        <button class="btn btn-ghost ep-mv" data-dir="x+">ชิดประตู ⇥</button>
-        <button class="btn btn-ghost ep-mv" data-dir="z-">⇤ ชิดซ้าย</button>
-        <button class="btn btn-ghost ep-mv" data-dir="z+">ชิดขวา ⇥</button>
+        <button class="btn btn-ghost ep-mv" data-dir="x-" data-i18n="ep_mx0">⇤ ชิดหัวตู้</button>
+        <button class="btn btn-ghost ep-mv" data-dir="x+" data-i18n="ep_mx1">ชิดประตู ⇥</button>
+        <button class="btn btn-ghost ep-mv" data-dir="z-" data-i18n="ep_mz0">⇤ ชิดซ้าย</button>
+        <button class="btn btn-ghost ep-mv" data-dir="z+" data-i18n="ep_mz1">ชิดขวา ⇥</button>
       </div>
-      <div class="ep-lb">ขยับทีละ 50 มม.</div>
+      <div class="ep-lb" data-i18n="ep_ndlb">ขยับทีละ 50 มม.</div>
       <div class="ep-row">
-        <button class="btn btn-ghost ep-nd" data-mx="-50" data-mz="0">◀ ไปหัวตู้</button>
-        <button class="btn btn-ghost ep-nd" data-mx="50" data-mz="0">ไปประตู ▶</button>
-        <button class="btn btn-ghost ep-nd" data-mx="0" data-mz="-50">◀ ไปซ้าย</button>
-        <button class="btn btn-ghost ep-nd" data-mx="0" data-mz="50">ไปขวา ▶</button>
+        <button class="btn btn-ghost ep-nd" data-mx="-50" data-mz="0" data-i18n="ep_nx0">◀ ไปหัวตู้</button>
+        <button class="btn btn-ghost ep-nd" data-mx="50" data-mz="0" data-i18n="ep_nx1">ไปประตู ▶</button>
+        <button class="btn btn-ghost ep-nd" data-mx="0" data-mz="-50" data-i18n="ep_nz0">◀ ไปซ้าย</button>
+        <button class="btn btn-ghost ep-nd" data-mx="0" data-mz="50" data-i18n="ep_nz1">ไปขวา ▶</button>
       </div>
       <div class="ep-flash" id="epFlash"></div>
-      <div class="ep-note">ลากชิ้นในภาพเพื่อย้ายตำแหน่งได้โดยตรง (มีระบบดูดเข้าชิดอัตโนมัติ) · ใช้ปุ่มชุดนี้เก็บงานละเอียด · ชิ้นที่ "เอาออก" จะไปรอที่ปุ่ม "วางชิ้นตกค้าง"</div>
+      <div class="ep-note" data-i18n="ep_note">ลากชิ้นในภาพเพื่อย้ายตำแหน่งได้โดยตรง (มีระบบดูดเข้าชิดอัตโนมัติ) · ใช้ปุ่มชุดนี้เก็บงานละเอียด · ชิ้นที่ "เอาออก" จะไปรอที่ปุ่ม "วางชิ้นตกค้าง"</div>
     </div>
     <div class="stats" id="stats" style="display:none">
       <div class="stat">
-        <div class="lb">การใช้พื้นที่ (UTILIZATION)</div>
+        <div class="lb" data-i18n="st_util">การใช้พื้นที่ (UTILIZATION)</div>
         <div class="stat-num" id="stUtil">–</div>
         <div class="bar"><i id="barUtil" style="width:0%"></i></div>
       </div>
       <div class="stat">
-        <div class="lb">น้ำหนักรวม / พิกัดบรรทุก</div>
+        <div class="lb" data-i18n="st_wt">น้ำหนักรวม / พิกัดบรรทุก</div>
         <div class="stat-num" id="stWt">–</div>
         <div class="bar"><i id="barWt" style="width:0%"></i></div>
       </div>
       <div class="stat">
-        <div class="lb">จำนวนที่วางได้</div>
+        <div class="lb" data-i18n="st_cnt">จำนวนที่วางได้</div>
         <div class="stat-num" id="stCnt">–</div>
       </div>
       <div class="stat warn-card hidden" id="stWarn">
-        <div class="lb">⚠ ข้อควรระวัง</div>
+        <div class="lb" data-i18n="st_warn">⚠ ข้อควรระวัง</div>
         <div id="stWarnTxt"></div>
       </div>
     </div>
@@ -414,15 +419,15 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
 <div class="cl-overlay" id="clOverlay">
   <div class="cl-panel">
     <div class="cl-head">
-      <h2>มีอะไรใหม่</h2>
+      <h2 data-i18n="cl_title">มีอะไรใหม่</h2>
       <button class="cl-close" id="clClose" title="ปิด">✕</button>
     </div>
-    <div class="cl-sub">ประวัติการพัฒนาโปรแกรม Cargo Loader 3D — พัฒนาต่อเนื่องจากฟีดแบ็คผู้ใช้จริง</div>
+    <div class="cl-sub" data-i18n="cl_sub">ประวัติการพัฒนาโปรแกรม Cargo Loader 3D — พัฒนาต่อเนื่องจากฟีดแบ็คผู้ใช้จริง</div>
     <div id="clList"></div>
     <div class="cl-foot">
-      <span>อยากรู้เบื้องหลังการพัฒนา หรือมีไอเดียฟีเจอร์ใหม่?</span>
-      <a class="link-btn link-yt" href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener" onclick="track('click_youtube',{location:'changelog'})">▶ ติดตามช่อง</a>
-      <a class="link-btn link-fb" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'changelog'})">✎ ส่งไอเดีย</a>
+      <span data-i18n="cl_q">อยากรู้เบื้องหลังการพัฒนา หรือมีไอเดียฟีเจอร์ใหม่?</span>
+      <a class="link-btn link-yt" href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener" onclick="track('click_youtube',{location:'changelog'})"><span data-i18n="cl_yt">▶ ติดตามช่อง</span></a>
+      <a class="link-btn link-fb" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'changelog'})"><span data-i18n="cl_fb">✎ ส่งไอเดีย</span></a>
     </div>
   </div>
 </div>
@@ -434,25 +439,25 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
    PURE-START : ข้อมูลมาตรฐาน + อัลกอริทึมจัดเรียง (ไม่พึ่ง DOM)
    ============================================================ */
 var CONTAINER_PRESETS = [
-  {id:'20ft',  name:'ตู้คอนเทนเนอร์ 20 ฟุต',        L:5898,  W:2352, H:2393, payload:28200},
-  {id:'40ft',  name:'ตู้คอนเทนเนอร์ 40 ฟุต',        L:12032, W:2352, H:2393, payload:26700},
-  {id:'40hq',  name:'ตู้คอนเทนเนอร์ 40 ฟุต HQ',     L:12032, W:2352, H:2698, payload:26500},
-  {id:'reef20',name:'ตู้เย็น (Reefer) 20 ฟุต',      L:5449,  W:2290, H:2244, payload:27400},
-  {id:'pick4', name:'รถกระบะตู้ทึบ 4 ล้อ',           L:2400,  W:1700, H:1700, payload:1100},
-  {id:'tr6',   name:'รถบรรทุก 6 ล้อ ตู้ทึบ',         L:5500,  W:2200, H:2200, payload:5000},
-  {id:'tr10',  name:'รถบรรทุก 10 ล้อ ตู้ทึบ',        L:7200,  W:2300, H:2400, payload:15000},
-  {id:'trail', name:'รถเทรลเลอร์ตู้ 40 ฟุต',         L:12000, W:2300, H:2500, payload:25000},
-  {id:'custom',name:'— กำหนดขนาดเอง —',            L:0, W:0, H:0, payload:0}
+  {id:'20ft',  name:'ตู้คอนเทนเนอร์ 20 ฟุต', nameEn:'20 ft container',        L:5898,  W:2352, H:2393, payload:28200},
+  {id:'40ft',  name:'ตู้คอนเทนเนอร์ 40 ฟุต', nameEn:'40 ft container',        L:12032, W:2352, H:2393, payload:26700},
+  {id:'40hq',  name:'ตู้คอนเทนเนอร์ 40 ฟุต HQ', nameEn:'40 ft HQ (high cube)',     L:12032, W:2352, H:2698, payload:26500},
+  {id:'reef20',name:'ตู้เย็น (Reefer) 20 ฟุต', nameEn:'20 ft reefer',      L:5449,  W:2290, H:2244, payload:27400},
+  {id:'pick4', name:'รถกระบะตู้ทึบ 4 ล้อ', nameEn:'4-wheel box pickup (TH)',           L:2400,  W:1700, H:1700, payload:1100},
+  {id:'tr6',   name:'รถบรรทุก 6 ล้อ ตู้ทึบ', nameEn:'6-wheel box truck (TH)',         L:5500,  W:2200, H:2200, payload:5000},
+  {id:'tr10',  name:'รถบรรทุก 10 ล้อ ตู้ทึบ', nameEn:'10-wheel box truck (TH)',        L:7200,  W:2300, H:2400, payload:15000},
+  {id:'trail', name:'รถเทรลเลอร์ตู้ 40 ฟุต', nameEn:'40 ft trailer (TH)',         L:12000, W:2300, H:2500, payload:25000},
+  {id:'custom',name:'— กำหนดขนาดเอง —', nameEn:'— Custom size —',            L:0, W:0, H:0, payload:0}
 ];
 
 var BOX_PRESETS = [
-  {name:'กล่องไปรษณีย์ ง (30×22×20 ซม.)', shape:'box', l:300, w:220, h:200, weight:3},
-  {name:'กล่องไปรษณีย์ จ (40×24×17 ซม.)', shape:'box', l:400, w:240, h:170, weight:4},
-  {name:'กล่อง Carton 60×40×40 ซม.',      shape:'box', l:600, w:400, h:400, weight:12},
-  {name:'กล่อง Carton 50×40×30 ซม.',      shape:'box', l:500, w:400, h:300, weight:8},
-  {name:'พาเลทพร้อมสินค้า 100×120×120 ซม.', shape:'box', l:1200, w:1000, h:1200, weight:350},
-  {name:'ถังพลาสติก 200 ลิตร (Ø58×90 ซม.)', shape:'cylinder', orient:'v', dia:580, h:900, weight:80},
-  {name:'ม้วนฟิล์ม/ท่อ วางนอน (Ø30×120 ซม.)', shape:'cylinder', orient:'h', dia:300, h:1200, weight:25}
+  {name:'กล่องไปรษณีย์ ง (30×22×20 ซม.)', nameEn:'Post box D (30×22×20 cm)', shape:'box', l:300, w:220, h:200, weight:3},
+  {name:'กล่องไปรษณีย์ จ (40×24×17 ซม.)', nameEn:'Post box E (40×24×17 cm)', shape:'box', l:400, w:240, h:170, weight:4},
+  {name:'กล่อง Carton 60×40×40 ซม.', nameEn:'Carton 60×40×40 cm',      shape:'box', l:600, w:400, h:400, weight:12},
+  {name:'กล่อง Carton 50×40×30 ซม.', nameEn:'Carton 50×40×30 cm',      shape:'box', l:500, w:400, h:300, weight:8},
+  {name:'พาเลทพร้อมสินค้า 100×120×120 ซม.', nameEn:'Loaded pallet 100×120×120 cm', shape:'box', l:1200, w:1000, h:1200, weight:350},
+  {name:'ถังพลาสติก 200 ลิตร (Ø58×90 ซม.)', nameEn:'200 L drum (Ø58×90 cm)', shape:'cylinder', orient:'v', dia:580, h:900, weight:80},
+  {name:'ม้วนฟิล์ม/ท่อ วางนอน (Ø30×120 ซม.)', nameEn:'Film roll/pipe, lying (Ø30×120 cm)', shape:'cylinder', orient:'h', dia:300, h:1200, weight:25}
 ];
 
 var MAX_UNITS = 5000;  /* เพดานจำนวนชิ้น — ส่วนที่เกินความจุตู้ถูกตัดเป็นตกค้างทันทีด้วย early-stop จึงรับจำนวนสูงได้ */
@@ -716,10 +721,10 @@ function _coll3D(x,y,z,dx,dy,dz,q){
 /* ขยับทีละก้าว — คืน null เมื่อสำเร็จ หรือข้อความเหตุผลเมื่อไม่ได้ */
 function manualNudge(p, mx, mz, cont, placed){
   var nx = p.x+mx, nz = p.z+mz;
-  if(nx < -EPS || nz < -EPS || nx+p.dx > cont.L+EPS || nz+p.dz > cont.W+EPS) return 'ติดผนังตู้';
+  if(nx < -EPS || nz < -EPS || nx+p.dx > cont.L+EPS || nz+p.dz > cont.W+EPS) return 'err_wall';
   for(var i=0;i<placed.length;i++){
     var q = placed[i];
-    if(q !== p && _coll3D(nx,p.y,nz,p.dx,p.dy,p.dz,q)) return 'ชนชิ้นอื่น';
+    if(q !== p && _coll3D(nx,p.y,nz,p.dx,p.dy,p.dz,q)) return 'err_coll';
   }
   p.x = Math.max(0,nx); p.z = Math.max(0,nz);
   reGravity(placed);
@@ -758,12 +763,12 @@ function manualSweep(p, dir, cont, placed){
 
 /* หมุน 90 องศารอบมุมเดิม (สลับกว้าง-ยาว) */
 function manualRotate(p, cont, placed){
-  if(p.shape==='cylinder' && p.orient!=='h') return 'ทรงกระบอกวางตั้งฐานเป็นวงกลม การหมุนไม่มีผล';
+  if(p.shape==='cylinder' && p.orient!=='h') return 'err_rot_vstand';
   var ndx = p.dz, ndz = p.dx;
-  if(p.x+ndx > cont.L+EPS || p.z+ndz > cont.W+EPS) return 'หมุนไม่ได้ — ติดผนังตู้ ลองเลื่อนออกก่อน';
+  if(p.x+ndx > cont.L+EPS || p.z+ndz > cont.W+EPS) return 'err_rot_wall';
   for(var i=0;i<placed.length;i++){
     var q = placed[i];
-    if(q !== p && _coll3D(p.x,p.y,p.z,ndx,p.dy,ndz,q)) return 'หมุนไม่ได้ — ชนชิ้นอื่น ลองเลื่อนออกก่อน';
+    if(q !== p && _coll3D(p.x,p.y,p.z,ndx,p.dy,ndz,q)) return 'err_rot_coll';
   }
   p.dx = ndx; p.dz = ndz;
   if(p.shape==='cylinder' && p.orient==='h') p.axis = (p.axis==='x') ? 'z' : 'x';
@@ -876,6 +881,7 @@ chLogoImg.src = CH_LOGO;
 /* ============================================================
    ข้อมูลตัวอย่าง (Mock) — งานส่งของโรงงานพลาสติก ด้วยรถ 6 ล้อ
    ============================================================ */
+var MOCK_EN = ['200 L resin drum','Shrink film roll (lying)','Box A — molded parts','Box B — mold spares','Box C — packaging film','Box D — light goods'];
 var items = [
   {name:'ถังเม็ดพลาสติก 200 ลิตร', shape:'cylinder', dia:580, h:900,  weight:80, qty:8,  color:'#FFC53D', rotatable:false, noStack:true,  orient:'v'},
   {name:'ม้วนฟิล์มหด (วางนอน)',    shape:'cylinder', dia:300, h:1200, weight:25, qty:10, color:'#4FD8E0', rotatable:true,  noStack:false, orient:'h'},
@@ -895,24 +901,35 @@ var $ = function(id){ return document.getElementById(id); };
 function getContainer(){
   var p = CONTAINER_PRESETS.find(function(c){ return c.id===selectedContainerId; });
   if(p.id==='custom'){
-    return {name:'กำหนดเอง', L:+$('ccL').value||1, W:+$('ccW').value||1,
+    return {name:T('cont_custom_name'), L:+$('ccL').value||1, W:+$('ccW').value||1,
             H:+$('ccH').value||1, payload:+$('ccP').value||1};
   }
-  return {name:p.name, L:p.L, W:p.W, H:p.H, payload:p.payload};
+  return {name:(LANG==='en' && p.nameEn) ? p.nameEn : p.name, L:p.L, W:p.W, H:p.H, payload:p.payload};
 }
 
 function refreshContainerInfo(){
   var c = getContainer();
   $('containerInfo').textContent =
-    'ขนาดภายใน '+c.L+' × '+c.W+' × '+c.H+' มม. · ปริมาตร '
-    +(c.L*c.W*c.H/1e9).toFixed(1)+' ลบ.ม. · บรรทุกได้ '+c.payload.toLocaleString()+' กก.';
+    T('info_container', c.L, c.W, c.H, (c.L*c.W*c.H/1e9).toFixed(1), c.payload.toLocaleString());
 }
 
 function initContainerSel(){
   var sel = $('containerSel');
+  initContainerSel.refresh = function(){
+    var keep = sel.value;
+    sel.innerHTML = '';
+    CONTAINER_PRESETS.forEach(function(c){
+      var o = document.createElement('option');
+      o.value = c.id;
+      o.textContent = (LANG==='en' && c.nameEn) ? c.nameEn : c.name;
+      sel.appendChild(o);
+    });
+    sel.value = keep;
+  };
   CONTAINER_PRESETS.forEach(function(c){
     var o = document.createElement('option');
-    o.value = c.id; o.textContent = c.name;
+    o.value = c.id;
+    o.textContent = (LANG==='en' && c.nameEn) ? c.nameEn : c.name;
     sel.appendChild(o);
   });
   sel.value = selectedContainerId;
@@ -927,18 +944,33 @@ function initContainerSel(){
 
 function initBoxPresetSel(){
   var sel = $('boxPresetSel');
+  initBoxPresetSel.refresh = function(){
+    var keep = sel.value;
+    sel.innerHTML = '';
+    var o0 = document.createElement('option');
+    o0.value = ''; o0.textContent = T('bp_manual');
+    sel.appendChild(o0);
+    BOX_PRESETS.forEach(function(b, i){
+      var o = document.createElement('option');
+      o.value = i;
+      o.textContent = (LANG==='en' && b.nameEn) ? b.nameEn : b.name;
+      sel.appendChild(o);
+    });
+    sel.value = keep;
+  };
   var o0 = document.createElement('option');
-  o0.value = ''; o0.textContent = '— กรอกเองด้านล่าง —';
+  o0.value = ''; o0.textContent = T('bp_manual');
   sel.appendChild(o0);
   BOX_PRESETS.forEach(function(b, i){
     var o = document.createElement('option');
-    o.value = i; o.textContent = b.name;
+    o.value = i;
+    o.textContent = (LANG==='en' && b.nameEn) ? b.nameEn : b.name;
     sel.appendChild(o);
   });
   sel.onchange = function(){
     if(sel.value==='') return;
     var b = BOX_PRESETS[+sel.value];
-    $('fName').value = b.name;
+    $('fName').value = (LANG==='en' && b.nameEn) ? b.nameEn : b.name;
     $('fShape').value = (b.shape==='box') ? 'box' : (b.orient==='h' ? 'cyl_h' : 'cyl_v');
     $('fShape').onchange();
     if(b.shape==='box'){ $('fL').value=b.l; $('fW').value=b.w; $('fH').value=b.h; }
@@ -951,27 +983,27 @@ function renderItemRows(){
   var tb = $('itemRows');
   tb.innerHTML = '';
   if(items.length===0){
-    tb.innerHTML = '<tr><td class="dm" style="padding:12px 4px">ยังไม่มีสินค้า — เพิ่มจากฟอร์มด้านล่าง</td></tr>';
+    tb.innerHTML = '<tr><td class="dm" style="padding:12px 4px">'+T('it_empty')+'</td></tr>';
     return;
   }
   items.forEach(function(it, i){
     var tr = document.createElement('tr');
     var dims = it.shape==='cylinder'
-      ? 'ทรงกระบอก Ø'+it.dia+' × '+(it.orient==='h' ? 'ยาว ' : 'สูง ')+it.h+' มม.'
-      : it.l+' × '+it.w+' × '+it.h+' มม.';
+      ? T('it_cyl', it.dia, (it.orient==='h' ? T('it_h_word') : T('it_v_word')), it.h)
+      : it.l+' × '+it.w+' × '+it.h+' '+(LANG==='en'?'mm':'มม.');
     var tags = '';
-    if(it.shape==='cylinder') tags += '<span class="tag">'+(it.orient==='h' ? 'วางนอน' : 'วางตั้ง')+'</span>';
-    if(it.noStack) tags += '<span class="tag">ห้ามวางทับ</span>';
-    if(it.rotatable && (it.shape==='box' || it.orient==='h')) tags += '<span class="tag">หมุนได้</span>';
+    if(it.shape==='cylinder') tags += '<span class="tag">'+(it.orient==='h' ? T('tag_h') : T('tag_v'))+'</span>';
+    if(it.noStack) tags += '<span class="tag">'+T('tag_nostack')+'</span>';
+    if(it.rotatable && (it.shape==='box' || it.orient==='h')) tags += '<span class="tag">'+T('tag_rot')+'</span>';
     tr.innerHTML =
       '<td style="width:20px"><span class="dot" style="background:'+it.color+'"></span></td>' +
-      '<td><div class="nm">'+it.name+'</div><div class="dm">'+dims+' · '+it.weight+' กก./ชิ้น</div><div>'+tags+'</div></td>' +
-      '<td style="text-align:right; white-space:nowrap"><b>'+it.qty+'</b> ชิ้น</td>' +
+      '<td><div class="nm">'+it.name+'</div><div class="dm">'+dims+' · '+it.weight+' '+T('u_kg')+'/'+T('u_pcs')+'</div><div>'+tags+'</div></td>' +
+      '<td style="text-align:right; white-space:nowrap"><b>'+it.qty+'</b> '+T('u_pcs')+'</td>' +
       '<td style="width:52px; white-space:nowrap">' +
-        '<button class="del mvup" title="เลื่อนขึ้น" data-i="'+i+'">▲</button>' +
-        '<button class="del mvdn" title="เลื่อนลง" data-i="'+i+'">▼</button>' +
+        '<button class="del mvup" title="'+T('tt_up')+'" data-i="'+i+'">▲</button>' +
+        '<button class="del mvdn" title="'+T('tt_dn')+'" data-i="'+i+'">▼</button>' +
       '</td>' +
-      '<td style="width:28px"><button class="del rm" title="ลบ" data-i="'+i+'">✕</button></td>';
+      '<td style="width:28px"><button class="del rm" title="'+T('tt_rm')+'" data-i="'+i+'">✕</button></td>';
     tb.appendChild(tr);
   });
   tb.querySelectorAll('.rm').forEach(function(b){
@@ -999,18 +1031,18 @@ function initForm(){
     var vert = (v === 'cyl_v');
     $('boxDims').classList.toggle('hidden', cyl);
     $('cylDims').classList.toggle('hidden', !cyl);
-    $('fCHLabel').textContent = (v === 'cyl_h') ? 'ยาว (มม.)' : 'สูง (มม.)';
+    $('fCHLabel').textContent = (v === 'cyl_h') ? T('lb_len') : T('lb_h');
     /* แสดง checkbox หมุนทุกรูปทรงเพื่อความสม่ำเสมอ —
        ทรงกระบอกวางตั้งฐานเป็นวงกลม การหมุนไม่มีผล จึงปิดใช้งานพร้อมอธิบาย */
     if(vert){
       $('fRot').checked = false;
       $('fRot').disabled = true;
-      $('rotLabel').textContent = 'อนุญาตให้หมุนแนวนอนได้ — ไม่มีผลกับทรงวางตั้ง เพราะฐานเป็นวงกลม';
+      $('rotLabel').textContent = T('rot_lb_vstand');
       $('rotWrap').style.opacity = '0.45';
     }else{
       $('fRot').disabled = false;
       $('fRot').checked = true;
-      $('rotLabel').textContent = 'อนุญาตให้หมุนแนวนอนได้ (สลับกว้าง–ยาว)';
+      $('rotLabel').textContent = T('rot_lb_norm');
       $('rotWrap').style.opacity = '1';
     }
   };
@@ -1018,7 +1050,7 @@ function initForm(){
   $('btnAdd').onclick = function(){
     var v = $('fShape').value;
     var shape = (v === 'box') ? 'box' : 'cylinder';
-    var name = $('fName').value.trim() || ('สินค้า '+(items.length+1));
+    var name = $('fName').value.trim() || (T('def_item')+' '+(items.length+1));
     var it = {
       name:name, shape:shape, color:$('fColor').value,
       weight:Math.max(0, +$('fWt').value||0),
@@ -1174,7 +1206,7 @@ function buildContainerMesh(c){
   wall.position.set(0.001, H/2, W/2);
   containerGroup.add(wall);
 
-  var lb = makeLabelSprite('◀ ประตู / ท้ายรถ');
+  var lb = makeLabelSprite(T('spr_door'));
   lb.position.set(L+0.35, H*0.55, W/2);
   containerGroup.add(lb);
 
@@ -1261,9 +1293,9 @@ function setSelection(i){
   if(p && meshes[selIdx]){
     meshes[selIdx].material.emissive.setHex(0x5A2A00);
     var it = items[p.idx];
-    $('epName').textContent = it ? it.name : 'สินค้า';
-    $('epDims').textContent = Math.round(p.dx)+' × '+Math.round(p.dz)+' × '+Math.round(p.dy)
-      +' มม. · ห่างหัวตู้ '+Math.round(p.x)+' · ห่างซ้าย '+Math.round(p.z)+' · สูงจากพื้น '+Math.round(p.y)+' มม.';
+    $('epName').textContent = it ? it.name : T('ep_item');
+    $('epDims').textContent = T('ep_dims', Math.round(p.dx), Math.round(p.dz), Math.round(p.dy),
+      Math.round(p.x), Math.round(p.z), Math.round(p.y));
     $('epRotate').disabled = (p.shape==='cylinder' && p.orient!=='h');
     $('epFlash').textContent = '';
     $('editPanel').classList.remove('hidden');
@@ -1283,7 +1315,7 @@ function updatePlaceRestBtn(){
   var n = lastResult ? sumUnplaced(lastResult.unplaced) : 0;
   var b = $('btnPlaceRest');
   b.classList.toggle('hidden', n === 0);
-  b.textContent = '⟲ วางชิ้นตกค้าง ('+n+')';
+  b.textContent = T('btn_rest', n);
 }
 
 /* คำนวณสถิติ/คำเตือน/ขั้นตอนใหม่ + วาดฉากใหม่ หลังการแก้ไขด้วยมือ */
@@ -1390,7 +1422,7 @@ function initPicking(canvas){
     }else{
       ds = null;
       setSelection(idx);
-      epFlash('ปล่อยตรงนั้นไม่ได้ (เกินเพดานตู้หรือทับชิ้นห้ามวางทับ) — ชิ้นเด้งกลับที่เดิม');
+      epFlash(T('drag_invalid'));
     }
   }
   canvas.addEventListener('pointerup', endDrag);
@@ -1406,7 +1438,7 @@ function initEditPanel(){
   $('epRotate').onclick = function(){
     var p = selPiece(); if(!p) return;
     var err = manualRotate(p, lastResult.container, lastResult.placed);
-    if(err){ epFlash(err); return; }
+    if(err){ epFlash(T(err)); return; }
     refreshAfterManual('rotate');
   };
   $('epRemove').onclick = function(){
@@ -1428,7 +1460,7 @@ function initEditPanel(){
     b.onclick = function(){
       var p = selPiece(); if(!p) return;
       var err = manualNudge(p, +b.dataset.mx, +b.dataset.mz, lastResult.container, lastResult.placed);
-      if(err){ epFlash(err); return; }
+      if(err){ epFlash(T(err)); return; }
       refreshAfterManual('nudge');
     };
   });
@@ -1437,7 +1469,7 @@ function initEditPanel(){
     var res = packMoreUnits(lastResult.container, lastResult.placed, lastResult.unplaced, items, lastResult.order);
     lastResult.unplaced = res.unplaced;
     refreshAfterManual('place_rest');
-    if(res.added === 0) epFlash ? alert('ยังวางเพิ่มไม่ได้ — ลองหมุน/ขยับชิ้นที่วางแล้วเพื่อเปิดพื้นที่ แล้วกดอีกครั้ง') : null;
+    if(res.added === 0) alert(T('al_norest'));
   };
 }
 
@@ -1445,10 +1477,10 @@ function initEditPanel(){
    จัดเรียง + อัปเดตสถิติ
    ============================================================ */
 function runPack(){
-  if(items.length===0){ alert('กรุณาเพิ่มสินค้าอย่างน้อย 1 รายการ'); return; }
+  if(items.length===0){ alert(T('al_noitem')); return; }
   var c = getContainer();
   var btn = $('btnPack');
-  btn.disabled = true; btn.textContent = 'กำลังคำนวณ… 0%';
+  btn.disabled = true; btn.textContent = T('btn_calc', 0);
   $('btnPdf').disabled = true;
 
   /* คำนวณทีละงวดผ่าน setTimeout เพื่อให้หน้าจอตอบสนองและแสดงความคืบหน้าได้
@@ -1462,7 +1494,7 @@ function runPack(){
       done = packStepBatch(st, 25);
     }
     if(!done){
-      btn.textContent = 'กำลังคำนวณ… ' + Math.round(st.i/total*100) + '%';
+      btn.textContent = T('btn_calc', Math.round(st.i/total*100));
       setTimeout(loop, 0);
       return;
     }
@@ -1490,7 +1522,7 @@ function runPack(){
     $('hint').style.display = 'none';
     $('stats').style.display = 'flex';
     $('btnPdf').disabled = lastResult.placed.length===0;
-    btn.disabled = false; btn.textContent = '▶ จัดเรียงสินค้า';
+    btn.disabled = false; btn.textContent = T('tb_pack');
   })();
 }
 
@@ -1500,12 +1532,12 @@ function updateStats(c, r){
   $('barUtil').style.width = Math.min(100, pct) + '%';
 
   var wPct = c.payload>0 ? r.totalWeight/c.payload*100 : 0;
-  $('stWt').textContent = Math.round(r.totalWeight).toLocaleString() + ' / ' + c.payload.toLocaleString() + ' กก.';
+  $('stWt').textContent = Math.round(r.totalWeight).toLocaleString() + ' / ' + c.payload.toLocaleString() + ' ' + T('u_kg');
   var bw = $('barWt');
   bw.style.width = Math.min(100, wPct) + '%';
   bw.className = wPct>100 ? 'over' : '';
 
-  $('stCnt').textContent = r.placed.length + ' / ' + r.totalUnits + ' ชิ้น';
+  $('stCnt').textContent = r.placed.length + ' / ' + r.totalUnits + ' ' + T('u_pcs');
 
   var un = Object.keys(r.unplaced);
   var warn = [];
@@ -1518,21 +1550,21 @@ function updateStats(c, r){
         leftVol += v * r.unplaced[k];
       }
     });
-    warn.push('พื้นที่ตู้ไม่พอ — วางได้ '+r.placed.length+' / '+r.totalUnits+' ชิ้น · ตกค้าง: '
-      + un.map(function(k){ return (items[k]?items[k].name:'?')+' '+r.unplaced[k]+' ชิ้น'; }).join(', ')
-      + ' (ปริมาตรที่ขาดราว '+(leftVol/1e9).toFixed(1)+' ลบ.ม.) · แนะนำ: ใช้ตู้/รถใหญ่ขึ้น เพิ่มคัน หรือแบ่งรอบส่ง');
+    warn.push(T('warn_space', r.placed.length, r.totalUnits,
+      un.map(function(k){ return (items[k]?items[k].name:'?')+' '+r.unplaced[k]+' '+T('u_pcs'); }).join(', '),
+      (leftVol/1e9).toFixed(1)));
   }
-  if(wPct>100) warn.push('น้ำหนักเกินพิกัดบรรทุก!');
-  if(r.hcylStack>0) warn.push('มีการวางสินค้าทับทรงกระบอกแนวนอน '+r.hcylStack+' จุด — หน้างานต้องใช้ไม้หมอน/ลิ่มกันกลิ้งรองรับ');
-  if(r.vcylStack>0) warn.push('มีการวางสินค้าทับถัง/ทรงกระบอกวางตั้ง '+r.vcylStack+' จุด — ควรรองแผ่นไม้/พาเลทคั่นชั้นก่อนวาง');
-  if(r.truncated) warn.push('จำนวนชิ้นรวมเกินขีดจำกัดการคำนวณ '+MAX_UNITS.toLocaleString()+' ชิ้น — แสดงผลเฉพาะ '+MAX_UNITS.toLocaleString()+' ชิ้นแรก · แนะนำ: แบ่งคำนวณทีละคัน/ทีละรอบส่ง');
+  if(wPct>100) warn.push(T('warn_over'));
+  if(r.hcylStack>0) warn.push(T('warn_hcyl', r.hcylStack));
+  if(r.vcylStack>0) warn.push(T('warn_vcyl', r.vcylStack));
+  if(r.truncated) warn.push(T('warn_trunc', MAX_UNITS.toLocaleString()));
   $('stWarn').classList.toggle('hidden', warn.length===0);
   $('stWarnTxt').innerHTML = warn.join('<br>');
 }
 
 function updateStepLabel(){
   var sl = $('stepSlider');
-  $('stepLabel').textContent = sl.value + ' / ' + sl.max + ' ชิ้น';
+  $('stepLabel').textContent = sl.value + ' / ' + sl.max + ' ' + T('u_pcs');
   setVisibleCount(+sl.value);
 }
 
@@ -1592,16 +1624,16 @@ function pageHeader(ctx, title, sub, pageNo, pageTotal){
   ctx.fillText(sub, PW-46, 48);
   ctx.fillStyle = '#8A97A5';
   ctx.font = '400 20px Sarabun, sans-serif';
-  ctx.fillText('หน้า '+pageNo+' / '+pageTotal, PW-46, PH-30);
+  ctx.fillText(T('pdf_page', pageNo, pageTotal), PW-46, PH-30);
   ctx.textAlign = 'left';
-  ctx.fillText('จัดทำด้วยโปรแกรม Cargo Loader 3D · ช่อง คุยกับไออี — youtube.com/@_talkwithie.5264', 46, PH-30);
+  ctx.fillText(T('pdf_foot'), 46, PH-30);
 }
 
 async function exportPDF(){
   if(!lastResult || lastResult.placed.length===0) return;
   setSelection(-1);
   var btn = $('btnPdf');
-  btn.disabled = true; btn.textContent = 'กำลังสร้าง PDF…';
+  btn.disabled = true; btn.textContent = T('btn_pdf_busy');
   var c = getContainer();
   var r = lastResult;
 
@@ -1629,13 +1661,13 @@ async function exportPDF(){
     var jsPDF = window.jspdf.jsPDF;
     var pdf = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
     var pageTotal = r.steps.length + 1;
-    var dateStr = new Date().toLocaleDateString('th-TH', {year:'numeric', month:'long', day:'numeric'});
+    var dateStr = new Date().toLocaleDateString(LANG==='en' ? 'en-GB' : 'th-TH', {year:'numeric', month:'long', day:'numeric'});
 
     /* ---------- หน้า 1 : สรุปแผน ---------- */
     setDimRange(r.placed.length, r.placed.length);   /* แสดงทุกชิ้นเต็มสี */
     var finalIso = await loadImg(captureShot(1250, 900, isoCam));
     var pg = pageCanvas();
-    pageHeader(pg.ctx, 'แผนการจัดเรียงสินค้า (Loading Plan)', dateStr, 1, pageTotal);
+    pageHeader(pg.ctx, T('pdf_title'), dateStr, 1, pageTotal);
     var ctx = pg.ctx;
 
     ctx.fillStyle = '#1D2733';
@@ -1643,19 +1675,19 @@ async function exportPDF(){
     ctx.fillText(c.name, 46, 156);
     ctx.font = '400 23px Sarabun, sans-serif';
     ctx.fillStyle = '#44515F';
-    ctx.fillText('ขนาดภายใน '+c.L+' × '+c.W+' × '+c.H+' มม. · พิกัดบรรทุก '+c.payload.toLocaleString()+' กก.', 46, 194);
+    ctx.fillText(T('pdf_dims', c.L, c.W, c.H, c.payload.toLocaleString()), 46, 194);
 
     /* ตารางรายการ */
     var ty = 250;
     ctx.font = '600 22px Kanit, Sarabun, sans-serif';
     ctx.fillStyle = '#8A5A2B';
-    ctx.fillText('รายการสินค้า', 46, ty-14);
+    ctx.fillText(T('pdf_items'), 46, ty-14);
     ctx.font = '600 20px Sarabun, sans-serif';
     ctx.fillStyle = '#44515F';
-    ctx.fillText('ขนาด (มม.)', 420, ty-14);
-    ctx.fillText('สั่ง', 640, ty-14);
-    ctx.fillText('วางได้', 710, ty-14);
-    ctx.fillText('นน.รวม (กก.)', 800, ty-14);
+    ctx.fillText(T('pdf_col_size'), 420, ty-14);
+    ctx.fillText(T('pdf_col_order'), 640, ty-14);
+    ctx.fillText(T('pdf_col_placed'), 710, ty-14);
+    ctx.fillText(T('pdf_col_wt'), 800, ty-14);
     ctx.strokeStyle = '#D8DEE5';
     ctx.beginPath(); ctx.moveTo(46, ty); ctx.lineTo(950, ty); ctx.stroke();
 
@@ -1680,10 +1712,10 @@ async function exportPDF(){
     /* กล่องสรุปตัวเลข */
     ty += 60;
     var statY = ty;
-    [['การใช้พื้นที่', (Math.round(r.utilization*1000)/10)+' %'],
-     ['น้ำหนักรวม', Math.round(r.totalWeight).toLocaleString()+' กก.'],
-     ['จำนวนที่วางได้', r.placed.length+' / '+r.totalUnits+' ชิ้น'],
-     ['จำนวนขั้นตอน', r.steps.length+' ขั้น']].forEach(function(sIt, i){
+    [[T('pdf_s_util'), (Math.round(r.utilization*1000)/10)+' %'],
+     [T('pdf_s_wt'), T('pdf_s_wt_v', Math.round(r.totalWeight).toLocaleString())],
+     [T('pdf_s_cnt'), T('pdf_s_cnt_v', r.placed.length, r.totalUnits)],
+     [T('pdf_s_steps'), T('pdf_s_steps_v', r.steps.length)]].forEach(function(sIt, i){
       var bx = 46 + i*232;
       ctx.fillStyle = '#F2F4F7';
       ctx.fillRect(bx, statY, 216, 96);
@@ -1698,7 +1730,7 @@ async function exportPDF(){
     ctx.drawImage(finalIso, 990, 130, 720, 519);
     ctx.fillStyle = '#8A97A5';
     ctx.font = '400 19px Sarabun, sans-serif';
-    ctx.fillText('ภาพรวมเมื่อจัดเรียงครบทุกชิ้น (มุมมองจากฝั่งประตู)', 990, 675);
+    ctx.fillText(T('pdf_overview'), 990, 675);
 
     pdf.addImage(pg.cv.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 297, 210);
 
@@ -1715,7 +1747,7 @@ async function exportPDF(){
       var top = await loadImg(captureShot(760, 560, topCam));
 
       pg = pageCanvas(); ctx = pg.ctx;
-      pageHeader(ctx, 'ขั้นตอนที่ '+(s+1)+' จาก '+r.steps.length, c.name, s+2, pageTotal);
+      pageHeader(ctx, T('pdf_step', s+1, r.steps.length), c.name, s+2, pageTotal);
 
       /* ภาพหลัก */
       ctx.drawImage(iso, 40, 130, 1090, 767);
@@ -1728,25 +1760,25 @@ async function exportPDF(){
       ctx.fillRect(rx, 140, 30, 30);
       ctx.fillStyle = '#1D2733';
       ctx.font = '600 30px Kanit, Sarabun, sans-serif';
-      ctx.fillText('วาง: '+it.name.slice(0, 18), rx+44, 164);
+      ctx.fillText(T('pdf_place')+it.name.slice(0, 18), rx+44, 164);
       ctx.font = '400 24px Sarabun, sans-serif';
       ctx.fillStyle = '#44515F';
       ctx.font = '400 23px Sarabun, sans-serif';
       var dm2 = it.shape==='cylinder'
-        ? 'ทรงกระบอก'+(it.orient==='h' ? 'วางนอน' : '')+' Ø'+it.dia+' × '+it.h+' มม.'
-        : 'ขนาด '+it.l+' × '+it.w+' × '+it.h+' มม.';
+        ? T('pdf_dm_cyl', (it.orient==='h' ? T('pdf_hword') : ''), it.dia, it.h)
+        : T('pdf_dm_box', it.l, it.w, it.h);
       ctx.fillText(dm2, rx, 214);
       ctx.fillStyle = '#B34700';
       ctx.font = '600 46px Kanit, Sarabun, sans-serif';
-      ctx.fillText('จำนวน '+n+' ชิ้น', rx, 280);
+      ctx.fillText(T('pdf_qty', n), rx, 280);
       ctx.fillStyle = '#44515F';
       ctx.font = '400 23px Sarabun, sans-serif';
-      ctx.fillText('วางแล้วสะสม: '+st.to+' / '+r.placed.length+' ชิ้น', rx, 330);
-      ctx.fillText('น้ำหนักสะสม: '+Math.round(cumW).toLocaleString()+' กก.', rx, 366);
+      ctx.fillText(T('pdf_cum1', st.to, r.placed.length), rx, 330);
+      ctx.fillText(T('pdf_cum2', Math.round(cumW).toLocaleString()), rx, 366);
       var wy = 406;
       if(it.noStack){
         ctx.fillStyle = '#C43D3D';
-        ctx.fillText('⚠ ห้ามวางสินค้าอื่นทับด้านบน', rx, wy);
+        ctx.fillText(T('pdf_w_nostack'), rx, wy);
       }
       /* รวบรวมคำเตือนการวางทับทรงกระบอกของขั้นนี้ ไปแสดงใต้ภาพ Top View */
       var stepHasHCyl = false, stepHasVCyl = false;
@@ -1756,12 +1788,12 @@ async function exportPDF(){
       }
       var warnLines = [];
       if(stepHasHCyl){
-        warnLines.push('⚠ ขั้นนี้วางทับทรงกระบอกแนวนอน');
-        warnLines.push('    — ต้องใช้ไม้หมอน/ลิ่มกันกลิ้งรองรับ');
+        warnLines.push(T('pdf_w_h1'));
+        warnLines.push(T('pdf_w_h2'));
       }
       if(stepHasVCyl){
-        warnLines.push('⚠ ขั้นนี้วางทับถัง/ทรงกระบอกวางตั้ง');
-        warnLines.push('    — ควรรองแผ่นไม้/พาเลทคั่นชั้นก่อนวาง');
+        warnLines.push(T('pdf_w_v1'));
+        warnLines.push(T('pdf_w_v2'));
       }
 
       ctx.drawImage(top, rx, 460, 540, 398);
@@ -1769,7 +1801,7 @@ async function exportPDF(){
       ctx.strokeRect(rx, 460, 540, 398);
       ctx.fillStyle = '#8A97A5';
       ctx.font = '400 19px Sarabun, sans-serif';
-      ctx.fillText('มุมมองด้านบน (Top View) — ประตูอยู่ด้านซ้าย', rx, 884);
+      ctx.fillText(T('pdf_top'), rx, 884);
       if(warnLines.length){
         ctx.fillStyle = '#C43D3D';
         ctx.font = '600 23px Sarabun, sans-serif';
@@ -1779,7 +1811,7 @@ async function exportPDF(){
       }
       ctx.fillStyle = '#8A97A5';
       ctx.font = '400 19px Sarabun, sans-serif';
-      ctx.fillText('ชิ้นสีจาง = วางไปแล้วในขั้นก่อนหน้า · สีเต็ม = วางในขั้นนี้', 40, 930);
+      ctx.fillText(T('pdf_legend'), 40, 930);
 
       pdf.addPage();
       pdf.addImage(pg.cv.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 297, 210);
@@ -1792,7 +1824,7 @@ async function exportPDF(){
       placed_units: r.placed.length
     });
   }catch(err){
-    alert('เกิดข้อผิดพลาดในการสร้าง PDF: ' + err.message);
+    alert(T('pdf_err') + err.message);
   }finally{
     /* คืนค่าฉากและมุมมอง */
     clearDim();
@@ -1804,59 +1836,252 @@ async function exportPDF(){
     camera.updateProjectionMatrix();
     orbit.theta = oldOrbit.theta; orbit.phi = oldOrbit.phi; orbit.dist = oldOrbit.dist;
     resize3d();
-    btn.disabled = false; btn.textContent = '⬇ ส่งออก PDF ทีละขั้นตอน';
+    btn.disabled = false; btn.textContent = T('tb_pdf');
   }
 }
 
 /* ============================================================
    ประวัติการอัปเดต — เพิ่มรายการใหม่ไว้บนสุดทุกครั้งที่ปล่อยเวอร์ชัน
    ============================================================ */
-var APP_VER = '1.7';
+
+/* ============================================================
+   ระบบสองภาษา (TH/EN) — ข้อความทั้งหมดรวมที่เดียว
+   ============================================================ */
+var LANG = 'th';
+try{
+  LANG = localStorage.getItem('cl3d_lang')
+      || ((navigator.language||'th').toLowerCase().indexOf('th')===0 ? 'th' : 'en');
+}catch(e){}
+window.APP_LANG = LANG;
+
+var I18N = {
+th:{
+  title:'Cargo Loader 3D — โปรแกรมวางแผนจัดเรียงสินค้าเข้าตู้/ขึ้นรถ',
+  hd_by:'โดยช่อง คุยกับไออี · โปรแกรมวางแผนจัดเรียงสินค้าเข้าตู้ / ขึ้นรถบรรทุก',
+  hd_yt:'▶ ติดตามช่อง คุยกับไออี', hd_manual:'📖 คู่มือการใช้งาน', hd_fb:'✎ แบบสอบถามฟีดแบ็ค',
+  s1:'1 · ตู้ / รถบรรทุก', s1_type:'เลือกประเภท',
+  s1_l:'ยาวภายใน (มม.)', s1_w:'กว้างภายใน (มม.)', s1_h:'สูงภายใน (มม.)', s1_p:'น้ำหนักบรรทุก (กก.)',
+  s2:'2 · รายการสินค้า', s2_order:'ลำดับการจัดเรียง',
+  s2_auto:'อัตโนมัติ — ของหนักอยู่ล่าง/ในสุด (แนะนำ)', s2_entry:'ตามลำดับรายการ บน → ล่าง',
+  sort_note_auto:'โปรแกรมเรียงของหนัก/ชิ้นใหญ่ลงก่อน เพื่อให้อยู่ชั้นล่างและลึกสุดของตู้',
+  sort_note_entry:'⚠ โหมดนี้วางตามลำดับรายการ (ใช้ปุ่ม ▲▼ จัดลำดับ) เหมาะกับงานเรียงตามจุดส่ง — จะไม่บังคับกฎของหนักอยู่ล่าง โปรดตรวจความมั่นคงเอง',
+  s3:'3 · เพิ่มสินค้า', s3_lib:'เลือกจากคลังมาตรฐาน (ไม่บังคับ)', s3_name:'ชื่อสินค้า', s3_ph:'เช่น กล่องสินค้า A',
+  s3_shape:'รูปทรง', sh_box:'กล่องสี่เหลี่ยม', sh_cv:'ทรงกระบอก — วางตั้ง (ถัง, ดรัม)', sh_ch:'ทรงกระบอก — วางนอน (ม้วน, ท่อ)',
+  s3_color:'สี', s3_bl:'ยาว (มม.)', s3_bw:'กว้าง (มม.)', s3_bh:'สูง (มม.)',
+  s3_dia:'เส้นผ่านศูนย์กลาง (มม.)', lb_h:'สูง (มม.)', lb_len:'ยาว (มม.)',
+  s3_wt:'น้ำหนัก/ชิ้น (กก.)', s3_qty:'จำนวน (ชิ้น)',
+  rot_lb_norm:'อนุญาตให้หมุนแนวนอนได้ (สลับกว้าง–ยาว)',
+  rot_lb_vstand:'อนุญาตให้หมุนแนวนอนได้ — ไม่มีผลกับทรงวางตั้ง เพราะฐานเป็นวงกลม',
+  s3_nostack:'ห้ามวางสินค้าอื่นทับด้านบน', s3_add:'＋ เพิ่มเข้ารายการ',
+  cc_desc:'แจกฟรีเครื่องมือดิจิทัลสำหรับโรงงาน SME · ถ้าโปรแกรมนี้มีประโยชน์ ฝากติดตามช่องและส่งฟีดแบ็คให้ด้วยนะครับ',
+  cc_manual:'📖 คู่มือ', cc_fb:'✎ ส่งฟีดแบ็ค',
+  pdpa:'เว็บนี้เก็บสถิติการใช้งานแบบไม่ระบุตัวตน (Google Analytics) เพื่อนำไปพัฒนาโปรแกรม · ข้อมูลสินค้าที่คุณกรอกประมวลผลในเครื่องของคุณเท่านั้น ไม่ถูกส่งออกไปที่ใด',
+  tb_pack:'▶ จัดเรียงสินค้า', tb_pdf:'⬇ ส่งออก PDF ทีละขั้นตอน', tb_view:'รีเซ็ตมุมมอง',
+  tb_tip:'💡 คลิกชิ้น = เลือก · ลากชิ้น = ย้าย', tb_step:'ดูทีละชิ้น',
+  btn_calc:'กำลังคำนวณ… {0}%', btn_rest:'⟲ วางชิ้นตกค้าง ({0})',
+  ep_rot:'⟳ หมุน 90°', ep_rm:'🗑 เอาออก', ep_snaplb:'เลื่อนชิดจนสุด',
+  ep_mx0:'⇤ ชิดหัวตู้', ep_mx1:'ชิดประตู ⇥', ep_mz0:'⇤ ชิดซ้าย', ep_mz1:'ชิดขวา ⇥',
+  ep_ndlb:'ขยับทีละ 50 มม.', ep_nx0:'◀ ไปหัวตู้', ep_nx1:'ไปประตู ▶', ep_nz0:'◀ ไปซ้าย', ep_nz1:'ไปขวา ▶',
+  ep_note:'ลากชิ้นในภาพเพื่อย้ายตำแหน่งได้โดยตรง (มีระบบดูดเข้าชิดอัตโนมัติ) · ใช้ปุ่มชุดนี้เก็บงานละเอียด · ชิ้นที่ "เอาออก" จะไปรอที่ปุ่ม "วางชิ้นตกค้าง"',
+  ep_dims:'{0} × {1} × {2} มม. · ห่างหัวตู้ {3} · ห่างซ้าย {4} · สูงจากพื้น {5} มม.',
+  ep_item:'สินค้า',
+  st_util:'การใช้พื้นที่ (UTILIZATION)', st_wt:'น้ำหนักรวม / พิกัดบรรทุก', st_cnt:'จำนวนที่วางได้', st_warn:'⚠ ข้อควรระวัง',
+  u_kg:'กก.', u_pcs:'ชิ้น', u_m3:'ลบ.ม.',
+  cl_title:'มีอะไรใหม่', cl_sub:'ประวัติการพัฒนาโปรแกรม Cargo Loader 3D — พัฒนาต่อเนื่องจากฟีดแบ็คผู้ใช้จริง',
+  cl_q:'อยากรู้เบื้องหลังการพัฒนา หรือมีไอเดียฟีเจอร์ใหม่?', cl_yt:'▶ ติดตามช่อง', cl_fb:'✎ ส่งไอเดีย', cl_ver:'เวอร์ชัน',
+  info_container:'ขนาดภายใน {0} × {1} × {2} มม. · ปริมาตร {3} ลบ.ม. · บรรทุกได้ {4} กก.',
+  cont_custom_name:'กำหนดเอง', bp_manual:'— กรอกเองด้านล่าง —',
+  it_empty:'ยังไม่มีสินค้า — เพิ่มจากฟอร์มด้านล่าง',
+  it_cyl:'ทรงกระบอก Ø{0} × {1} {2} มม.', it_h_word:'ยาว', it_v_word:'สูง',
+  tag_v:'วางตั้ง', tag_h:'วางนอน', tag_nostack:'ห้ามวางทับ', tag_rot:'หมุนได้',
+  def_item:'สินค้า', hint_ready:'กด "จัดเรียงสินค้า" เพื่อเริ่มคำนวณ',
+  hint_fail:'โหลดไลบรารี 3D ไม่สำเร็จ — กรุณาเชื่อมต่ออินเทอร์เน็ตแล้วเปิดไฟล์ใหม่',
+  al_noitem:'กรุณาเพิ่มสินค้าอย่างน้อย 1 รายการ',
+  al_norest:'ยังวางเพิ่มไม่ได้ — ลองหมุน/ขยับชิ้นที่วางแล้วเพื่อเปิดพื้นที่ แล้วกดอีกครั้ง',
+  warn_space:'พื้นที่ตู้ไม่พอ — วางได้ {0} / {1} ชิ้น · ตกค้าง: {2} (ปริมาตรที่ขาดราว {3} ลบ.ม.) · แนะนำ: ใช้ตู้/รถใหญ่ขึ้น เพิ่มคัน หรือแบ่งรอบส่ง',
+  warn_over:'น้ำหนักเกินพิกัดบรรทุก!',
+  warn_hcyl:'มีการวางสินค้าทับทรงกระบอกแนวนอน {0} จุด — หน้างานต้องใช้ไม้หมอน/ลิ่มกันกลิ้งรองรับ',
+  warn_vcyl:'มีการวางสินค้าทับถัง/ทรงกระบอกวางตั้ง {0} จุด — ควรรองแผ่นไม้/พาเลทคั่นชั้นก่อนวาง',
+  warn_trunc:'จำนวนชิ้นรวมเกินขีดจำกัดการคำนวณ {0} ชิ้น — แสดงผลเฉพาะ {0} ชิ้นแรก · แนะนำ: แบ่งคำนวณทีละคัน/ทีละรอบส่ง',
+  err_wall:'ติดผนังตู้', err_coll:'ชนชิ้นอื่น',
+  err_rot_vstand:'ทรงกระบอกวางตั้งฐานเป็นวงกลม การหมุนไม่มีผล',
+  err_rot_wall:'หมุนไม่ได้ — ติดผนังตู้ ลองเลื่อนออกก่อน',
+  err_rot_coll:'หมุนไม่ได้ — ชนชิ้นอื่น ลองเลื่อนออกก่อน',
+  drag_invalid:'ปล่อยตรงนั้นไม่ได้ (เกินเพดานตู้หรือทับชิ้นห้ามวางทับ) — ชิ้นเด้งกลับที่เดิม',
+  btn_pdf_busy:'กำลังสร้าง PDF…', tt_up:'เลื่อนขึ้น', tt_dn:'เลื่อนลง', tt_rm:'ลบ',
+  spr_door:'◀ ประตู / ท้ายรถ',
+  pdf_title:'แผนการจัดเรียงสินค้า (Loading Plan)',
+  pdf_dims:'ขนาดภายใน {0} × {1} × {2} มม. · พิกัดบรรทุก {3} กก.',
+  pdf_items:'รายการสินค้า', pdf_col_size:'ขนาด (มม.)', pdf_col_order:'สั่ง', pdf_col_placed:'วางได้', pdf_col_wt:'นน.รวม (กก.)',
+  pdf_s_util:'การใช้พื้นที่', pdf_s_wt:'น้ำหนักรวม', pdf_s_cnt:'จำนวนที่วางได้', pdf_s_steps:'จำนวนขั้นตอน',
+  pdf_s_wt_v:'{0} กก.', pdf_s_cnt_v:'{0} / {1} ชิ้น', pdf_s_steps_v:'{0} ขั้น',
+  pdf_overview:'ภาพรวมเมื่อจัดเรียงครบทุกชิ้น (มุมมองจากฝั่งประตู)',
+  pdf_step:'ขั้นตอนที่ {0} จาก {1}', pdf_place:'วาง: ',
+  pdf_dm_box:'ขนาด {0} × {1} × {2} มม.', pdf_dm_cyl:'ทรงกระบอก{0} Ø{1} × {2} มม.', pdf_hword:'วางนอน',
+  pdf_qty:'จำนวน {0} ชิ้น', pdf_cum1:'วางแล้วสะสม: {0} / {1} ชิ้น', pdf_cum2:'น้ำหนักสะสม: {0} กก.',
+  pdf_w_nostack:'⚠ ห้ามวางสินค้าอื่นทับด้านบน',
+  pdf_w_h1:'⚠ ขั้นนี้วางทับทรงกระบอกแนวนอน', pdf_w_h2:'    — ต้องใช้ไม้หมอน/ลิ่มกันกลิ้งรองรับ',
+  pdf_w_v1:'⚠ ขั้นนี้วางทับถัง/ทรงกระบอกวางตั้ง', pdf_w_v2:'    — ควรรองแผ่นไม้/พาเลทคั่นชั้นก่อนวาง',
+  pdf_top:'มุมมองด้านบน (Top View) — ประตูอยู่ด้านซ้าย',
+  pdf_legend:'ชิ้นสีจาง = วางไปแล้วในขั้นก่อนหน้า · สีเต็ม = วางในขั้นนี้',
+  pdf_page:'หน้า {0} / {1}',
+  pdf_foot:'จัดทำด้วยโปรแกรม Cargo Loader 3D · ช่อง คุยกับไออี — youtube.com/@_talkwithie.5264',
+  pdf_err:'เกิดข้อผิดพลาดในการสร้าง PDF: '
+},
+en:{
+  title:'Cargo Loader 3D — Container & Truck Loading Planner',
+  hd_by:'by Talk with IE channel · Container / truck load planning tool',
+  hd_yt:'▶ Follow Talk with IE', hd_manual:'📖 User Manual (TH)', hd_fb:'✎ Feedback Form',
+  s1:'1 · Container / Truck', s1_type:'Select type',
+  s1_l:'Inner length (mm)', s1_w:'Inner width (mm)', s1_h:'Inner height (mm)', s1_p:'Max payload (kg)',
+  s2:'2 · Cargo List', s2_order:'Packing order',
+  s2_auto:'Auto — heaviest at bottom/front (recommended)', s2_entry:'Follow list order, top → bottom',
+  sort_note_auto:'Heavier/larger items are placed first, so they sit at the bottom and deepest part of the container',
+  sort_note_entry:'⚠ Packs in list order (use ▲▼ to reorder) — good for multi-stop sequencing. The heavy-at-bottom rule is NOT enforced; check stability yourself',
+  s3:'3 · Add Cargo', s3_lib:'Pick from standard library (optional)', s3_name:'Item name', s3_ph:'e.g. Carton A',
+  s3_shape:'Shape', sh_box:'Rectangular box', sh_cv:'Cylinder — upright (drum, barrel)', sh_ch:'Cylinder — lying (roll, pipe)',
+  s3_color:'Color', s3_bl:'Length (mm)', s3_bw:'Width (mm)', s3_bh:'Height (mm)',
+  s3_dia:'Diameter (mm)', lb_h:'Height (mm)', lb_len:'Length (mm)',
+  s3_wt:'Weight/pc (kg)', s3_qty:'Quantity (pcs)',
+  rot_lb_norm:'Allow horizontal rotation (swap width–length)',
+  rot_lb_vstand:'Allow horizontal rotation — no effect for upright cylinders (circular base)',
+  s3_nostack:'Do not stack anything on top', s3_add:'＋ Add to list',
+  cc_desc:'Free digital tools for SME factories · If this helps you, please follow the channel and send feedback',
+  cc_manual:'📖 Manual', cc_fb:'✎ Feedback',
+  pdpa:'This site collects anonymous usage statistics (Google Analytics) to improve the tool · Your cargo data is processed entirely in your browser and never sent anywhere',
+  tb_pack:'▶ Pack Cargo', tb_pdf:'⬇ Export Step-by-Step PDF', tb_view:'Reset View',
+  tb_tip:'💡 Click = select · Drag = move', tb_step:'Step through',
+  btn_calc:'Calculating… {0}%', btn_rest:'⟲ Place leftover ({0})',
+  ep_rot:'⟳ Rotate 90°', ep_rm:'🗑 Remove', ep_snaplb:'Slide until touching',
+  ep_mx0:'⇤ To front wall', ep_mx1:'To door ⇥', ep_mz0:'⇤ To left', ep_mz1:'To right ⇥',
+  ep_ndlb:'Nudge by 50 mm', ep_nx0:'◀ Frontward', ep_nx1:'Doorward ▶', ep_nz0:'◀ Left', ep_nz1:'Right ▶',
+  ep_note:'Drag items in the 3D view to move them (auto edge-snapping) · Use these buttons for fine-tuning · Removed items wait at the "Place leftover" button',
+  ep_dims:'{0} × {1} × {2} mm · from front {3} · from left {4} · height off floor {5} mm',
+  ep_item:'Item',
+  st_util:'SPACE UTILIZATION', st_wt:'TOTAL WEIGHT / PAYLOAD', st_cnt:'ITEMS PLACED', st_warn:'⚠ CAUTION',
+  u_kg:'kg', u_pcs:'pcs', u_m3:'m³',
+  cl_title:"What's New", cl_sub:'Cargo Loader 3D development history — continuously improved from real user feedback',
+  cl_q:'Curious about the development, or have a feature idea?', cl_yt:'▶ Follow channel', cl_fb:'✎ Send idea', cl_ver:'Version',
+  info_container:'Inner {0} × {1} × {2} mm · volume {3} m³ · payload {4} kg',
+  cont_custom_name:'Custom', bp_manual:'— enter manually below —',
+  it_empty:'No cargo yet — add items using the form below',
+  it_cyl:'Cylinder Ø{0} × {1} {2} mm', it_h_word:'long', it_v_word:'high',
+  tag_v:'upright', tag_h:'lying', tag_nostack:'no-stack', tag_rot:'rotatable',
+  def_item:'Item', hint_ready:'Press "Pack Cargo" to start',
+  hint_fail:'Failed to load 3D library — please check your internet connection and reload',
+  al_noitem:'Please add at least one cargo item',
+  al_norest:'Nothing could be placed — rotate/move placed items to open space, then try again',
+  warn_space:'Not enough space — placed {0} / {1} pcs · left over: {2} (≈{3} m³ short) · Tip: use a larger container, add a vehicle, or split shipments',
+  warn_over:'Total weight exceeds payload limit!',
+  warn_hcyl:'{0} spot(s) stack cargo on lying cylinders — use chocks/wedges on site',
+  warn_vcyl:'{0} spot(s) stack cargo on upright drums — place a board/pallet between layers',
+  warn_trunc:'Total quantity exceeds the {0}-piece calculation limit — only the first {0} are shown · Tip: calculate per vehicle/trip',
+  err_wall:'Blocked by container wall', err_coll:'Collides with another item',
+  err_rot_vstand:'Upright cylinders have a circular base — rotation has no effect',
+  err_rot_wall:'Cannot rotate — blocked by wall, move it away first',
+  err_rot_coll:'Cannot rotate — collides with another item, move it away first',
+  drag_invalid:'Cannot drop there (over ceiling or onto a no-stack item) — snapped back',
+  btn_pdf_busy:'Generating PDF…', tt_up:'Move up', tt_dn:'Move down', tt_rm:'Remove',
+  spr_door:'◀ Door / rear',
+  pdf_title:'Loading Plan',
+  pdf_dims:'Inner {0} × {1} × {2} mm · payload {3} kg',
+  pdf_items:'Cargo list', pdf_col_size:'Size (mm)', pdf_col_order:'Qty', pdf_col_placed:'Placed', pdf_col_wt:'Wt. (kg)',
+  pdf_s_util:'Utilization', pdf_s_wt:'Total weight', pdf_s_cnt:'Items placed', pdf_s_steps:'Steps',
+  pdf_s_wt_v:'{0} kg', pdf_s_cnt_v:'{0} / {1} pcs', pdf_s_steps_v:'{0} steps',
+  pdf_overview:'Full load overview (viewed from the door side)',
+  pdf_step:'Step {0} of {1}', pdf_place:'Place: ',
+  pdf_dm_box:'Size {0} × {1} × {2} mm', pdf_dm_cyl:'Cylinder{0} Ø{1} × {2} mm', pdf_hword:' (lying)',
+  pdf_qty:'Quantity: {0} pcs', pdf_cum1:'Cumulative: {0} / {1} pcs', pdf_cum2:'Cumulative weight: {0} kg',
+  pdf_w_nostack:'⚠ Do not stack anything on top',
+  pdf_w_h1:'⚠ This step stacks onto lying cylinders', pdf_w_h2:'    — use chocks/wedges to secure',
+  pdf_w_v1:'⚠ This step stacks onto upright drums', pdf_w_v2:'    — place a board/pallet between layers',
+  pdf_top:'Top view — door on the left',
+  pdf_legend:'Faded = already loaded in earlier steps · solid = load in this step',
+  pdf_page:'Page {0} / {1}',
+  pdf_foot:'Created with Cargo Loader 3D · Talk with IE — youtube.com/@_talkwithie.5264',
+  pdf_err:'PDF export failed: '
+}};
+
+function T(key){
+  var s = (I18N[LANG] && I18N[LANG][key]) || I18N.th[key] || key;
+  for(var i=1; i<arguments.length; i++){
+    s = s.split('{'+(i-1)+'}').join(arguments[i]);
+  }
+  return s;
+}
+
+function applyLang(){
+  window.APP_LANG = LANG;
+  document.documentElement.lang = LANG;
+  document.title = T('title');
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    el.textContent = T(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){
+    el.placeholder = T(el.getAttribute('data-i18n-ph'));
+  });
+  var lb = document.getElementById('langBtn');
+  if(lb) lb.textContent = (LANG==='th') ? 'EN' : 'ไทย';
+}
+
+var APP_VER = '1.8';
 var CHANGELOG = [
-  {ver:'1.7', date:'ต.ค. 2569', items:[
-    'ขยายขีดจำกัดจาก 2,000 เป็น 5,000 ชิ้น — ส่วนที่เกินความจุตู้ถูกสรุปเป็นรายการตกค้างทันที ไม่หน่วงเครื่อง',
-    'แจ้งชัดเจนว่าอะไรไม่พอ: ระบุชื่อสินค้า จำนวนชิ้นที่ตกค้าง และปริมาตรพื้นที่ที่ขาด (ลบ.ม.)',
-    'เพิ่มโหมด "จัดตามลำดับรายการ" พร้อมปุ่ม ▲▼ จัดลำดับสินค้า — เหมาะกับงานเรียงตามจุดส่ง (โหมดอัตโนมัติของหนักอยู่ล่างยังเป็นค่าเริ่มต้น)',
-    'ภาพ 3 มิติลื่นขึ้นเมื่อชิ้นจำนวนมาก และ PDF คุมจำนวนขั้นตอนไม่ให้บานตามจำนวนชิ้น'
-  ]},
-  {ver:'1.6', date:'ต.ค. 2569', items:[
-    'ลากวางชิ้นสินค้าได้โดยตรงในภาพ 3 มิติ — กดค้างบนชิ้นแล้วลาก (กดพื้นที่ว่างยังหมุนมุมมองตามเดิม)',
-    'ระหว่างลากเห็นพรีวิวตำแหน่งจริงตามแรงโน้มถ่วง ชิ้นย้อมแดงเมื่อปล่อยไม่ได้ และเด้งกลับที่เดิมอัตโนมัติ',
-    'ระบบดูดเข้าชิด (snap) อัตโนมัติเมื่อขอบชิ้นเข้าใกล้ผนังตู้หรือชิ้นข้างเคียงในระยะ 30 มม.',
-    'แผงปุ่ม (ชิดจนสุด/ขยับ 50 มม.) ยังอยู่ครบ ใช้เก็บงานละเอียดคู่กับการลาก'
-  ]},
-  {ver:'1.5', date:'ต.ค. 2569', items:[
-    'โหมดแก้ไขด้วยตนเอง: คลิกชิ้นในภาพ 3 มิติ เพื่อหมุน 90° ขยับทีละ 50 มม. เลื่อนชิดผนัง/ชิ้นข้างเคียง หรือเอาชิ้นออก',
-    'ปุ่ม "วางชิ้นตกค้าง" — ลองวางชิ้นที่เหลือเพิ่มหลังจัดมือ โดยไม่ขยับชิ้นที่วางแล้ว',
-    'รองรับการจัดแบบ interlock ที่อัลกอริทึมอัตโนมัติหาไม่เจอ เช่น พาเลท 1000×1200 ในตู้ 20 ฟุต ครบ 10 ใบ',
-    'ทุกการแก้มือยังตรวจการชน แรงโน้มถ่วง และคำเตือนความปลอดภัยให้อัตโนมัติ'
-  ]},
-  {ver:'1.4', date:'ส.ค. 2569', items:[
-    'ปรับปรุงอัลกอริทึมให้เร็วขึ้นราว 20 เท่า — แก้ปัญหาหน้าค้าง (Page Unresponsive) เมื่อจำนวนชิ้นมาก',
-    'ขยายขีดจำกัดการคำนวณจาก 700 เป็น 2,000 ชิ้น',
-    'แสดงเปอร์เซ็นต์ความคืบหน้าระหว่างคำนวณ',
-    'ข้อความเตือนแยกสาเหตุชัดเจน พร้อมคำแนะนำวิธีแก้'
-  ]},
-  {ver:'1.3', date:'ส.ค. 2569', items:[
-    'เตือนอัตโนมัติเมื่อมีการวางสินค้าทับถัง/ทรงกระบอกวางตั้ง — แนะนำรองแผ่นไม้/พาเลทคั่นชั้น (ทั้งหน้าเว็บและ PDF)',
-    'แสดงตัวเลือกหมุนครบทุกรูปทรง พร้อมคำอธิบายเมื่อใช้ไม่ได้'
-  ]},
-  {ver:'1.2', date:'ส.ค. 2569', items:[
-    'รองรับทรงกระบอกวางนอน (ม้วน, ท่อ) พร้อมเตือนใช้ไม้หมอน/ลิ่มกันกลิ้งเมื่อมีการวางทับ',
-    'รวมรูปทรงและแนววางเป็นตัวเลือกเดียว 3 แบบ ให้เห็นชัดว่าเลือกอะไร',
-    'เพิ่มม้วนฟิล์ม/ท่อในคลังมาตรฐาน'
-  ]},
-  {ver:'1.1', date:'ส.ค. 2569', items:[
-    'เพิ่มปุ่มคู่มือการใช้งาน ลิงก์ติดตามช่อง และแบบสอบถามฟีดแบ็ค',
-    'เปิดใช้ระบบสถิติการใช้งานแบบไม่ระบุตัวตน เพื่อนำไปพัฒนาโปรแกรม'
-  ]},
-  {ver:'1.0', date:'ส.ค. 2569', items:[
-    'เปิดตัว: จัดเรียงสินค้าอัตโนมัติ แสดงผล 3 มิติแยกสี',
-    'ตู้คอนเทนเนอร์/รถบรรทุก 8 แบบ + กำหนดขนาดเอง',
-    'สินค้ากล่องและทรงกระบอก กำหนดน้ำหนัก สี เงื่อนไขหมุน/ห้ามวางทับ',
-    'ส่งออก PDF แผนการโหลดทีละขั้นตอน'
-  ]}
+  {ver:'1.8', date:{th:'ต.ค. 2569', en:'Oct 2026'}, items:{
+    th:['เพิ่มเวอร์ชันภาษาอังกฤษ — ปุ่ม TH/EN ที่มุมขวาบน สลับได้ทั้งหน้าจอ คำเตือน และเอกสาร PDF',
+        'เลือกภาษาอัตโนมัติตามเบราว์เซอร์ครั้งแรก และจำตัวเลือกไว้ให้'],
+    en:['Added English version — TH/EN button at top right switches the whole UI, warnings, and PDF output',
+        'Language auto-detected from your browser on first visit, and your choice is remembered']}},
+  {ver:'1.7', date:{th:'ต.ค. 2569', en:'Oct 2026'}, items:{
+    th:['ขยายขีดจำกัดจาก 2,000 เป็น 5,000 ชิ้น — ส่วนที่เกินความจุตู้ถูกสรุปเป็นรายการตกค้างทันที ไม่หน่วงเครื่อง',
+        'แจ้งชัดเจนว่าอะไรไม่พอ: ระบุชื่อสินค้า จำนวนชิ้นที่ตกค้าง และปริมาตรพื้นที่ที่ขาด (ลบ.ม.)',
+        'เพิ่มโหมด "จัดตามลำดับรายการ" พร้อมปุ่ม ▲▼ จัดลำดับสินค้า — เหมาะกับงานเรียงตามจุดส่ง',
+        'ภาพ 3 มิติลื่นขึ้นเมื่อชิ้นจำนวนมาก และ PDF คุมจำนวนขั้นตอนไม่ให้บาน'],
+    en:['Raised the limit from 2,000 to 5,000 pieces — overflow beyond container capacity is reported instantly as leftover',
+        'Clear shortage notice: item names, leftover counts, and missing volume (m³)',
+        'New "follow list order" mode with ▲▼ reordering — great for multi-stop loading',
+        'Smoother 3D with large counts, and PDF step count stays manageable']}},
+  {ver:'1.6', date:{th:'ต.ค. 2569', en:'Oct 2026'}, items:{
+    th:['ลากวางชิ้นสินค้าได้โดยตรงในภาพ 3 มิติ — กดค้างบนชิ้นแล้วลาก',
+        'พรีวิวตามแรงโน้มถ่วง ชิ้นย้อมแดงเมื่อปล่อยไม่ได้ และเด้งกลับอัตโนมัติ',
+        'ระบบดูดเข้าชิด (snap) เมื่อเข้าใกล้ผนังหรือชิ้นข้างเคียงในระยะ 30 มม.'],
+    en:['Drag & drop items directly in the 3D view — press and drag any piece',
+        'Live gravity preview; invalid drops turn red and bounce back automatically',
+        'Auto edge-snapping within 30 mm of walls and neighboring items']}},
+  {ver:'1.5', date:{th:'ต.ค. 2569', en:'Oct 2026'}, items:{
+    th:['โหมดแก้ไขด้วยตนเอง: คลิกชิ้นเพื่อหมุน 90° เลื่อนชิด ขยับละเอียด หรือเอาออก',
+        'ปุ่ม "วางชิ้นตกค้าง" — เครื่องเติมส่วนที่เหลือโดยไม่ขยับชิ้นที่จัดมือไว้',
+        'รองรับการจัดแบบ interlock เช่น พาเลท 1000×1200 ในตู้ 20 ฟุต ครบ 10 ใบ'],
+    en:['Manual edit mode: click an item to rotate 90°, slide-to-touch, nudge, or remove',
+        '"Place leftover" button — the solver fills remaining space without touching your manual layout',
+        'Enables interlock patterns, e.g. ten 1000×1200 pallets in a 20 ft container']}},
+  {ver:'1.4', date:{th:'ส.ค. 2569', en:'Aug 2026'}, items:{
+    th:['อัลกอริทึมเร็วขึ้นราว 20 เท่า แก้ปัญหาหน้าค้าง และแสดงเปอร์เซ็นต์ความคืบหน้า'],
+    en:['~20× faster algorithm, fixed page freezes, added progress percentage']}},
+  {ver:'1.3', date:{th:'ส.ค. 2569', en:'Aug 2026'}, items:{
+    th:['เตือนอัตโนมัติเมื่อวางสินค้าทับถัง/ทรงกระบอกวางตั้ง'],
+    en:['Automatic warning when cargo is stacked onto upright drums']}},
+  {ver:'1.2', date:{th:'ส.ค. 2569', en:'Aug 2026'}, items:{
+    th:['รองรับทรงกระบอกวางนอน (ม้วน, ท่อ) พร้อมคำเตือนไม้หมอน/ลิ่มกันกลิ้ง'],
+    en:['Lying cylinders (rolls, pipes) with chock/wedge safety warnings']}},
+  {ver:'1.1', date:{th:'ส.ค. 2569', en:'Aug 2026'}, items:{
+    th:['เพิ่มปุ่มคู่มือ ลิงก์ติดตามช่อง และระบบสถิติการใช้งาน'],
+    en:['Added manual button, channel links, and anonymous usage analytics']}},
+  {ver:'1.0', date:{th:'ส.ค. 2569', en:'Aug 2026'}, items:{
+    th:['เปิดตัวโปรแกรม: จัดเรียงอัตโนมัติ แสดงผล 3 มิติ และส่งออก PDF ทีละขั้นตอน'],
+    en:['Initial release: automatic packing, 3D visualization, and step-by-step PDF export']}}
 ];
+
+function renderChangelog(){
+  var list = $('clList');
+  list.innerHTML = '';
+  CHANGELOG.forEach(function(v){
+    var d = document.createElement('div');
+    d.className = 'cl-ver';
+    d.innerHTML = '<div class="cv">'+T('cl_ver')+' '+v.ver+' <small>'+(v.date[LANG]||v.date.th)+'</small></div>'
+      + '<ul>' + (v.items[LANG]||v.items.th).map(function(s){ return '<li>'+s+'</li>'; }).join('') + '</ul>';
+    list.appendChild(d);
+  });
+}
 
 function initChangelog(){
   $('verText').textContent = 'v' + APP_VER;
@@ -1867,14 +2092,7 @@ function initChangelog(){
   try{ seen = localStorage.getItem('cl3d_seen_ver'); }catch(e){}
   if(seen !== APP_VER) $('verBadge').classList.add('has-new');
 
-  var list = $('clList');
-  CHANGELOG.forEach(function(v){
-    var d = document.createElement('div');
-    d.className = 'cl-ver';
-    d.innerHTML = '<div class="cv">เวอร์ชัน '+v.ver+' <small>'+v.date+'</small></div>'
-      + '<ul>' + v.items.map(function(s){ return '<li>'+s+'</li>'; }).join('') + '</ul>';
-    list.appendChild(d);
-  });
+  renderChangelog();
 
   $('verBadge').onclick = function(){
     $('clOverlay').classList.add('open');
@@ -1893,19 +2111,45 @@ function initChangelog(){
    ============================================================ */
 window.addEventListener('load', function(){
   if(typeof THREE === 'undefined'){
-    $('hint').textContent = 'โหลดไลบรารี 3D ไม่สำเร็จ — กรุณาเชื่อมต่ออินเทอร์เน็ตแล้วเปิดไฟล์ใหม่';
+    applyLang();
+    $('hint').textContent = T('hint_fail');
     return;
   }
   $('chLogo').src = CH_LOGO;
   $('chLogo2').src = CH_LOGO;
+  if(LANG === 'en'){ items.forEach(function(it, i){ if(MOCK_EN[i]) it.name = MOCK_EN[i]; }); }
+  applyLang();
+  $('langBtn').onclick = function(){
+    LANG = (LANG === 'th') ? 'en' : 'th';
+    try{ localStorage.setItem('cl3d_lang', LANG); }catch(e){}
+    applyLang();
+    initContainerSel.refresh();
+    initBoxPresetSel.refresh();
+    renderItemRows();
+    $('sortMode').onchange();
+    $('fShape').onchange();
+    renderChangelog();
+    refreshContainerInfo();
+    updateStepLabel();
+    if(lastResult){
+      updateStats(lastResult.container, lastResult);
+      updatePlaceRestBtn();
+      buildContainerMesh(lastResult.container);
+      buildCargoMeshes(lastResult);
+      setVisibleCount(+$('stepSlider').value);
+      setSelection(-1);
+    }else{
+      $('hint').textContent = T('hint_ready');
+    }
+    track('lang_switch', {to: LANG});
+  };
   initChangelog();
   initContainerSel();
   initBoxPresetSel();
   initForm();
   var syncSortNote = function(){
     $('sortNote').textContent = $('sortMode').value === 'entry'
-      ? '⚠ โหมดนี้วางตามลำดับรายการ (ใช้ปุ่ม ▲▼ จัดลำดับ) เหมาะกับงานเรียงตามจุดส่ง — จะไม่บังคับกฎของหนักอยู่ล่าง โปรดตรวจความมั่นคงเอง'
-      : 'โปรแกรมเรียงของหนัก/ชิ้นใหญ่ลงก่อน เพื่อให้อยู่ชั้นล่างและลึกสุดของตู้';
+      ? T('sort_note_entry') : T('sort_note_auto');
   };
   $('sortMode').onchange = syncSortNote;
   syncSortNote();
@@ -1924,7 +2168,7 @@ window.addEventListener('load', function(){
     }
   };
   $('stepSlider').oninput = updateStepLabel;
-  $('hint').textContent = 'กด "จัดเรียงสินค้า" เพื่อเริ่มคำนวณ';
+  $('hint').textContent = T('hint_ready');
   runPack();   /* รันข้อมูลตัวอย่างทันทีเพื่อให้เห็นผลลัพธ์ */
 });
 </script>
