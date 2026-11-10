@@ -191,6 +191,12 @@ input[type=color]{
   background:var(--panel2); color:var(--muted); margin-right:3px; margin-top:2px;
 }
 .del{background:none; border:none; color:var(--muted); cursor:pointer; font-size:15px; padding:2px 6px}
+.qty-in{
+  width:58px; background:var(--panel2); border:1px solid var(--line); border-radius:7px;
+  color:var(--text); font-family:'Kanit'; font-size:12.5px; font-weight:600;
+  padding:3px 4px; text-align:right;
+}
+.qty-in:focus{outline:none; border-color:var(--accent)}
 .del:hover{color:var(--danger)}
 
 /* ===== Toolbar & viewport ===== */
@@ -998,13 +1004,27 @@ function renderItemRows(){
     tr.innerHTML =
       '<td style="width:20px"><span class="dot" style="background:'+it.color+'"></span></td>' +
       '<td><div class="nm">'+it.name+'</div><div class="dm">'+dims+' · '+it.weight+' '+T('u_kg')+'/'+T('u_pcs')+'</div><div>'+tags+'</div></td>' +
-      '<td style="text-align:right; white-space:nowrap"><b>'+it.qty+'</b> '+T('u_pcs')+'</td>' +
+      '<td style="text-align:right; white-space:nowrap"><input type="number" class="qty-in" min="1" max="5000" value="'+it.qty+'" data-i="'+i+'" title="'+T('tt_qty')+'"> '+T('u_pcs')+'</td>' +
       '<td style="width:52px; white-space:nowrap">' +
         '<button class="del mvup" title="'+T('tt_up')+'" data-i="'+i+'">▲</button>' +
         '<button class="del mvdn" title="'+T('tt_dn')+'" data-i="'+i+'">▼</button>' +
       '</td>' +
       '<td style="width:28px"><button class="del rm" title="'+T('tt_rm')+'" data-i="'+i+'">✕</button></td>';
     tb.appendChild(tr);
+  });
+  tb.querySelectorAll('.qty-in').forEach(function(inp){
+    inp.onchange = function(){
+      var i = +inp.dataset.i;
+      var v = Math.max(1, Math.min(5000, Math.round(+inp.value || 1)));
+      inp.value = v;
+      if(items[i] && items[i].qty !== v){
+        items[i].qty = v;
+        track('edit_qty', {after_pack: !!lastResult});
+        schedulePack();   /* มีผลจัดเรียงอยู่ → คำนวณใหม่ให้เอง */
+      }
+    };
+    /* กันตารางถูกวาดใหม่ระหว่างพิมพ์ (เราอัปเดตเมื่อ change เท่านั้น) */
+    inp.onclick = function(e){ e.stopPropagation(); };
   });
   tb.querySelectorAll('.rm').forEach(function(b){
     b.onclick = function(){ items.splice(+b.dataset.i, 1); renderItemRows(); };
@@ -1216,6 +1236,50 @@ function buildContainerMesh(c){
   orbit.theta = -0.85; orbit.phi = 1.02;
 }
 
+/* วาดชื่อสินค้าลงผิวกล่อง — สร้างครั้งเดียวต่อชนิดแล้วใช้ร่วมกันทุกชิ้น */
+var texCache = {};
+function itemTexture(idx){
+  var it = items[idx];
+  if(!it) return null;
+  var key = idx + '|' + it.color + '|' + it.name;
+  if(texCache[key]) return texCache[key];
+  var cv = document.createElement('canvas');
+  cv.width = 256; cv.height = 256;
+  var ctx = cv.getContext('2d');
+  ctx.fillStyle = it.color;
+  ctx.fillRect(0, 0, 256, 256);
+  var c = new THREE.Color(it.color);
+  var lum = 0.299*c.r + 0.587*c.g + 0.114*c.b;
+  ctx.fillStyle = lum > 0.55 ? '#14202E' : '#FFFFFF';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  var name = it.name, size = 46;
+  ctx.font = '600 '+size+'px Kanit, Tahoma, sans-serif';
+  while(ctx.measureText(name).width > 230 && size > 24){
+    size -= 3;
+    ctx.font = '600 '+size+'px Kanit, Tahoma, sans-serif';
+  }
+  if(ctx.measureText(name).width > 230){
+    /* ยังยาวเกิน → ตัดสองบรรทัด (พยายามตัดที่ช่องว่างกลางชื่อ) */
+    var cut = Math.ceil(name.length/2);
+    var sp = name.indexOf(' ', Math.max(0, cut-4));
+    if(sp > 0 && sp < name.length-1) cut = sp;
+    var l1 = name.slice(0, cut).trim(), l2 = name.slice(cut).trim();
+    while((ctx.measureText(l1).width > 230 || ctx.measureText(l2).width > 230) && size > 18){
+      size -= 3;
+      ctx.font = '600 '+size+'px Kanit, Tahoma, sans-serif';
+    }
+    if(ctx.measureText(l2).width > 230) l2 = l2.slice(0, 14) + '…';
+    ctx.fillText(l1, 128, 100);
+    ctx.fillText(l2, 128, 156);
+  }else{
+    ctx.fillText(name, 128, 128);
+  }
+  var tx = new THREE.CanvasTexture(cv);
+  tx.anisotropy = 4;
+  texCache[key] = tx;
+  return tx;
+}
+
 function buildCargoMeshes(result){
   if(cargoGroup) scene.remove(cargoGroup);
   cargoGroup = new THREE.Group();
@@ -1224,20 +1288,23 @@ function buildCargoMeshes(result){
   var seg = result.placed.length > 800 ? 12 : 24;   /* ลดความละเอียดทรงกระบอกเมื่อชิ้นเยอะ */
   result.placed.forEach(function(p){
     var col = new THREE.Color(items[p.idx] ? items[p.idx].color : '#888888');
+    var tex = itemTexture(p.idx);
+    /* มีเท็กซ์เจอร์ชื่อ = ใช้สีขาวเป็นฐานให้สีจริงมาจากภาพ, ไม่มี = ใช้สีตรง */
+    var matOpt = tex ? {color:0xFFFFFF, map:tex} : {color:col};
     var geo, mesh;
     if(p.shape==='cylinder' && p.orient==='h'){
       var len = (p.axis==='z' ? p.dz : p.dx);
       geo = new THREE.CylinderGeometry(p.dy*S/2*0.98, p.dy*S/2*0.98, len*S*0.985, seg);
-      mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:col}));
+      mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial(matOpt));
       /* แกนทรงกระบอกเริ่มที่แนวตั้ง (Y) — หมุนให้นอนตามแกนที่วาง */
       if(p.axis==='z') mesh.rotation.x = Math.PI/2;
       else mesh.rotation.z = Math.PI/2;
     }else if(p.shape==='cylinder'){
       geo = new THREE.CylinderGeometry(p.dx*S/2*0.98, p.dx*S/2*0.98, p.dy*S*0.985, seg);
-      mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:col}));
+      mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial(matOpt));
     }else{
       geo = new THREE.BoxGeometry(p.dx*S*0.985, p.dy*S*0.985, p.dz*S*0.985);
-      mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:col}));
+      mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial(matOpt));
     }
     mesh.position.set((p.x+p.dx/2)*S, (p.y+p.dy/2)*S, (p.z+p.dz/2)*S);
     if(!many){
@@ -1471,6 +1538,17 @@ function initEditPanel(){
     refreshAfterManual('place_rest');
     if(res.added === 0) alert(T('al_norest'));
   };
+}
+
+/* จัดเรียงใหม่อัตโนมัติหลังแก้จำนวน — หน่วงสั้น ๆ กันยิงรัวระหว่างกดลูกศร */
+var _schedT = null;
+function schedulePack(){
+  if(!lastResult) return;                 /* ยังไม่เคยจัด ไม่ต้องคำนวณเอง */
+  clearTimeout(_schedT);
+  _schedT = setTimeout(function(){
+    if($('btnPack').disabled){ schedulePack(); return; }   /* รอบก่อนยังคำนวณอยู่ → รอ */
+    runPack();
+  }, 450);
 }
 
 /* ============================================================
@@ -1908,7 +1986,7 @@ th:{
   err_rot_wall:'หมุนไม่ได้ — ติดผนังตู้ ลองเลื่อนออกก่อน',
   err_rot_coll:'หมุนไม่ได้ — ชนชิ้นอื่น ลองเลื่อนออกก่อน',
   drag_invalid:'ปล่อยตรงนั้นไม่ได้ (เกินเพดานตู้หรือทับชิ้นห้ามวางทับ) — ชิ้นเด้งกลับที่เดิม',
-  btn_pdf_busy:'กำลังสร้าง PDF…', tt_up:'เลื่อนขึ้น', tt_dn:'เลื่อนลง', tt_rm:'ลบ',
+  btn_pdf_busy:'กำลังสร้าง PDF…', tt_up:'เลื่อนขึ้น', tt_dn:'เลื่อนลง', tt_rm:'ลบ', tt_qty:'แก้จำนวนได้เลย — จัดเรียงใหม่ให้อัตโนมัติ',
   spr_door:'◀ ประตู / ท้ายรถ',
   pdf_title:'แผนการจัดเรียงสินค้า (Loading Plan)',
   pdf_dims:'ขนาดภายใน {0} × {1} × {2} มม. · พิกัดบรรทุก {3} กก.',
@@ -1981,7 +2059,7 @@ en:{
   err_rot_wall:'Cannot rotate — blocked by wall, move it away first',
   err_rot_coll:'Cannot rotate — collides with another item, move it away first',
   drag_invalid:'Cannot drop there (over ceiling or onto a no-stack item) — snapped back',
-  btn_pdf_busy:'Generating PDF…', tt_up:'Move up', tt_dn:'Move down', tt_rm:'Remove',
+  btn_pdf_busy:'Generating PDF…', tt_up:'Move up', tt_dn:'Move down', tt_rm:'Remove', tt_qty:'Edit quantity directly — repacks automatically',
   spr_door:'◀ Door / rear',
   pdf_title:'Loading Plan',
   pdf_dims:'Inner {0} × {1} × {2} mm · payload {3} kg',
@@ -2024,8 +2102,13 @@ function applyLang(){
   if(lb) lb.textContent = (LANG==='th') ? 'EN' : 'ไทย';
 }
 
-var APP_VER = '1.8';
+var APP_VER = '1.9';
 var CHANGELOG = [
+  {ver:'1.9', date:{th:'พ.ย. 2569', en:'Nov 2026'}, items:{
+    th:['แสดงชื่อสินค้าบนตัวกล่อง/ถังในภาพ 3 มิติและใน PDF — ไม่ต้องไล่เทียบสีอีกต่อไป',
+        'แก้จำนวนชิ้นได้โดยตรงในตารางรายการ แม้กดจัดเรียงไปแล้ว — โปรแกรมคำนวณใหม่ให้อัตโนมัติ'],
+    en:['Item names are now printed on boxes/drums in the 3D view and PDF — no more color matching',
+        'Edit quantities directly in the cargo list, even after packing — the plan recalculates automatically']}},
   {ver:'1.8', date:{th:'ต.ค. 2569', en:'Oct 2026'}, items:{
     th:['เพิ่มเวอร์ชันภาษาอังกฤษ — ปุ่ม TH/EN ที่มุมขวาบน สลับได้ทั้งหน้าจอ คำเตือน และเอกสาร PDF',
         'เลือกภาษาอัตโนมัติตามเบราว์เซอร์ครั้งแรก และจำตัวเลือกไว้ให้'],
