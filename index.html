@@ -197,6 +197,15 @@ input[type=color]{
   padding:3px 4px; text-align:right;
 }
 .qty-in:focus{outline:none; border-color:var(--accent)}
+#fbOverlay textarea{
+  width:100%; background:var(--panel2); border:1px solid var(--line); border-radius:9px;
+  color:var(--text); font-family:'Sarabun','Kanit',sans-serif; font-size:13.5px;
+  padding:8px 10px; resize:vertical; min-height:86px;
+}
+#fbOverlay textarea:focus{outline:2px solid var(--accent); outline-offset:0; border-color:transparent}
+#fbStatus.ok{color:#5BD98A}
+.fb-alt{color:var(--muted); font-size:11px}
+.fb-alt:hover{color:var(--text)}
 .del:hover{color:var(--danger)}
 
 /* ===== Toolbar & viewport ===== */
@@ -259,7 +268,7 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
   <div class="links">
     <a class="link-btn link-yt" href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener" onclick="track('click_youtube',{location:'header'})"><span data-i18n="hd_yt">▶ ติดตามช่อง คุยกับไออี</span></a>
     <a class="link-btn link-fb" href="https://drive.google.com/file/d/1zqXQWT4lEB8d15jIQ7V3hWoiiBrvjMdT/view?usp=sharing" target="_blank" rel="noopener" onclick="track('click_manual',{location:'header'})"><span data-i18n="hd_manual">📖 คู่มือการใช้งาน</span></a>
-    <a class="link-btn link-fb" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'header'})"><span data-i18n="hd_fb">✎ แบบสอบถามฟีดแบ็ค</span></a>
+    <a class="link-btn link-fb fb-link" data-loc="header" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener"><span data-i18n="hd_fb">✎ แบบสอบถามฟีดแบ็ค</span></a>
     <button class="link-btn link-fb" id="langBtn" title="Switch language">EN</button>
   </div>
 </header>
@@ -346,7 +355,7 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
         <div class="cc-desc" data-i18n="cc_desc">แจกฟรีเครื่องมือดิจิทัลสำหรับโรงงาน SME · ถ้าโปรแกรมนี้มีประโยชน์ ฝากติดตามช่องและส่งฟีดแบ็คให้ด้วยนะครับ</div>
         <a href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener" onclick="track('click_youtube',{location:'sidebar'})">▶ YouTube</a>
         <a href="https://drive.google.com/file/d/1zqXQWT4lEB8d15jIQ7V3hWoiiBrvjMdT/view?usp=sharing" target="_blank" rel="noopener" onclick="track('click_manual',{location:'sidebar'})"><span data-i18n="cc_manual">📖 คู่มือ</span></a>
-        <a href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'sidebar'})"><span data-i18n="cc_fb">✎ ส่งฟีดแบ็ค</span></a>
+        <a class="fb-link" data-loc="sidebar" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener"><span data-i18n="cc_fb">✎ ส่งฟีดแบ็ค</span></a>
       </div>
     </div>
     <div class="dim-note" style="margin-top:8px" data-i18n="pdpa">
@@ -433,7 +442,35 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
     <div class="cl-foot">
       <span data-i18n="cl_q">อยากรู้เบื้องหลังการพัฒนา หรือมีไอเดียฟีเจอร์ใหม่?</span>
       <a class="link-btn link-yt" href="https://www.youtube.com/@_talkwithie.5264" target="_blank" rel="noopener" onclick="track('click_youtube',{location:'changelog'})"><span data-i18n="cl_yt">▶ ติดตามช่อง</span></a>
-      <a class="link-btn link-fb" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" onclick="track('click_feedback',{location:'changelog'})"><span data-i18n="cl_fb">✎ ส่งไอเดีย</span></a>
+      <a class="link-btn link-fb fb-link" data-loc="changelog" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener"><span data-i18n="cl_fb">✎ ส่งไอเดีย</span></a>
+    </div>
+  </div>
+</div>
+
+<div class="cl-overlay" id="fbOverlay">
+  <div class="cl-panel" style="max-width:460px">
+    <div class="cl-head">
+      <h2 data-i18n="fb_title">ส่งฟีดแบ็คถึงผู้พัฒนา</h2>
+      <button class="cl-close" id="fbClose" title="ปิด">✕</button>
+    </div>
+    <div class="cl-sub" data-i18n="fb_sub">อ่านทุกข้อความ และหลายฟีเจอร์ในโปรแกรมนี้ก็มาจากฟีดแบ็คแบบนี้แหละ</div>
+    <label for="fbType" data-i18n="fb_type">ประเภท</label>
+    <select id="fbType">
+      <option value="idea" data-i18n="fb_t_idea">อยากได้ฟีเจอร์ / ข้อเสนอแนะ</option>
+      <option value="bug" data-i18n="fb_t_bug">พบปัญหา / ใช้งานไม่ได้</option>
+      <option value="praise" data-i18n="fb_t_praise">ชมเชย / กำลังใจ</option>
+    </select>
+    <label for="fbMsg" data-i18n="fb_msg_lb" style="margin-top:10px">ข้อความ</label>
+    <textarea id="fbMsg" rows="4" maxlength="1000" data-i18n-ph="fb_msg_ph" placeholder=""></textarea>
+    <label for="fbContact" data-i18n="fb_contact_lb" style="margin-top:10px">ช่องทางติดต่อกลับ (ไม่บังคับ)</label>
+    <input type="text" id="fbContact" maxlength="200" data-i18n-ph="fb_contact_ph" placeholder="">
+    <input type="text" id="fbWebsite" tabindex="-1" autocomplete="off"
+      style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0" aria-hidden="true">
+    <div class="dim-note" data-i18n="fb_meta_note" style="margin-top:8px">ระบบแนบข้อมูลการใช้งานไปด้วย (เวอร์ชัน, ภาษา, ตู้ที่เลือก, จำนวนชิ้น) เพื่อช่วยให้แก้ปัญหาได้ตรงจุด</div>
+    <button class="btn btn-accent" id="fbSend" data-i18n="fb_send" style="width:100%; margin-top:12px">ส่งฟีดแบ็ค</button>
+    <div class="ep-flash" id="fbStatus" style="text-align:center"></div>
+    <div class="dim-note" style="text-align:center; margin-top:4px">
+      <a class="fb-alt" id="fbAlt" href="https://forms.gle/rznZFVyvEYBd4kNu5" target="_blank" rel="noopener" data-i18n="fb_alt">หรือส่งผ่าน Google Form แบบเดิม</a>
     </div>
   </div>
 </div>
@@ -1540,6 +1577,90 @@ function initEditPanel(){
   };
 }
 
+/* ============================================================
+   ระบบฟีดแบ็คในเว็บ → Google Sheet (ผ่าน Google Apps Script)
+   วิธีเปิดใช้: deploy สคริปต์ GAS (ไฟล์ feedback-gas.gs) แล้วนำ
+   Web App URL มาวางใน FEEDBACK_URL ด้านล่าง
+   ถ้าปล่อยว่างไว้ ปุ่มฟีดแบ็คจะเปิด Google Form แบบเดิมโดยอัตโนมัติ
+   ============================================================ */
+var FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbyuxxlMu84zL3cG0N_FSEpno3fYKYK-nQKVBNgM4K20HoQxj7JBJHTCYNRDo_f16OIH/exec';   /* ← วาง Web App URL ของคุณที่นี่ เช่น 'https://script.google.com/macros/s/XXXX/exec' */
+
+var _fbLastSent = 0;
+
+function openFeedback(loc){
+  $('fbMsg').value = '';
+  $('fbStatus').textContent = '';
+  $('fbStatus').classList.remove('ok');
+  $('fbOverlay').classList.add('open');
+  track('feedback_open', {location: loc || 'unknown'});
+}
+
+function closeFeedback(){ $('fbOverlay').classList.remove('open'); }
+
+function submitFeedback(){
+  var stEl = $('fbStatus');
+  var msg = $('fbMsg').value.trim();
+  if($('fbWebsite').value){ closeFeedback(); return; }       /* honeypot: บอทกรอก = ทิ้งเงียบ ๆ */
+  if(!msg){ stEl.classList.remove('ok'); stEl.textContent = T('fb_need_msg'); return; }
+  if(Date.now() - _fbLastSent < 30000){ stEl.classList.remove('ok'); stEl.textContent = T('fb_wait'); return; }
+
+  var btn = $('fbSend');
+  btn.disabled = true; btn.textContent = T('fb_sending');
+
+  var meta = {
+    ver: APP_VER, lang: LANG,
+    container: lastResult ? lastResult.container.name : '-',
+    item_types: items.length,
+    total_units: lastResult ? lastResult.totalUnits : 0,
+    placed: lastResult ? lastResult.placed.length : 0,
+    util_pct: lastResult ? Math.round(lastResult.utilization*1000)/10 : 0,
+    order_mode: lastResult ? lastResult.order : '-',
+    ua: (navigator.userAgent || '').slice(0, 160)
+  };
+  var payload = {
+    type: $('fbType').value,
+    message: msg.slice(0, 1000),
+    contact: $('fbContact').value.trim().slice(0, 200),
+    meta: meta
+  };
+
+  /* ส่งแบบ text/plain เพื่อเลี่ยง CORS preflight — GAS อ่านจาก e.postData.contents */
+  fetch(FEEDBACK_URL, {
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  }).then(function(){
+    _fbLastSent = Date.now();
+    stEl.classList.add('ok');
+    stEl.textContent = T('fb_ok');
+    track('feedback_submit', {type: payload.type, has_contact: !!payload.contact});
+    $('fbMsg').value = ''; $('fbContact').value = '';
+    setTimeout(closeFeedback, 1400);
+  }).catch(function(){
+    stEl.classList.remove('ok');
+    stEl.textContent = T('fb_err');
+  }).finally(function(){
+    btn.disabled = false; btn.textContent = T('fb_send');
+  });
+}
+
+function initFeedback(){
+  document.querySelectorAll('.fb-link').forEach(function(a){
+    a.addEventListener('click', function(e){
+      if(FEEDBACK_URL){
+        e.preventDefault();
+        openFeedback(a.dataset.loc);
+      }else{
+        track('click_feedback', {location: a.dataset.loc});   /* fallback: Google Form แบบเดิม */
+      }
+    });
+  });
+  $('fbClose').onclick = closeFeedback;
+  $('fbSend').onclick = submitFeedback;
+  $('fbOverlay').onclick = function(e){ if(e.target === $('fbOverlay')) closeFeedback(); };
+  $('fbAlt').onclick = function(){ track('click_feedback', {location:'modal_alt'}); };
+}
+
 /* จัดเรียงใหม่อัตโนมัติหลังแก้จำนวน — หน่วงสั้น ๆ กันยิงรัวระหว่างกดลูกศร */
 var _schedT = null;
 function schedulePack(){
@@ -1953,7 +2074,7 @@ th:{
   s3_nostack:'ห้ามวางสินค้าอื่นทับด้านบน', s3_add:'＋ เพิ่มเข้ารายการ',
   cc_desc:'แจกฟรีเครื่องมือดิจิทัลสำหรับโรงงาน SME · ถ้าโปรแกรมนี้มีประโยชน์ ฝากติดตามช่องและส่งฟีดแบ็คให้ด้วยนะครับ',
   cc_manual:'📖 คู่มือ', cc_fb:'✎ ส่งฟีดแบ็ค',
-  pdpa:'เว็บนี้เก็บสถิติการใช้งานแบบไม่ระบุตัวตน (Google Analytics) เพื่อนำไปพัฒนาโปรแกรม · ข้อมูลสินค้าที่คุณกรอกประมวลผลในเครื่องของคุณเท่านั้น ไม่ถูกส่งออกไปที่ใด',
+  pdpa:'เว็บนี้เก็บสถิติการใช้งานแบบไม่ระบุตัวตน (Google Analytics) เพื่อนำไปพัฒนาโปรแกรม · ข้อมูลสินค้าที่คุณกรอกประมวลผลในเครื่องของคุณเท่านั้น ไม่ถูกส่งออกไปที่ใด · ข้อความฟีดแบ็คที่คุณกดส่งจะถูกเก็บเพื่อพัฒนาโปรแกรม ช่องติดต่อกลับเป็นทางเลือกและใช้ตอบกลับเท่านั้น',
   tb_pack:'▶ จัดเรียงสินค้า', tb_pdf:'⬇ ส่งออก PDF ทีละขั้นตอน', tb_view:'รีเซ็ตมุมมอง',
   tb_tip:'💡 คลิกชิ้น = เลือก · ลากชิ้น = ย้าย', tb_step:'ดูทีละชิ้น',
   btn_calc:'กำลังคำนวณ… {0}%', btn_rest:'⟲ วางชิ้นตกค้าง ({0})',
@@ -2004,7 +2125,20 @@ th:{
   pdf_legend:'ชิ้นสีจาง = วางไปแล้วในขั้นก่อนหน้า · สีเต็ม = วางในขั้นนี้',
   pdf_page:'หน้า {0} / {1}',
   pdf_foot:'จัดทำด้วยโปรแกรม Cargo Loader 3D · ช่อง คุยกับไออี — youtube.com/@_talkwithie.5264',
-  pdf_err:'เกิดข้อผิดพลาดในการสร้าง PDF: '
+  pdf_err:'เกิดข้อผิดพลาดในการสร้าง PDF: ',
+  fb_title:'ส่งฟีดแบ็คถึงผู้พัฒนา',
+  fb_sub:'อ่านทุกข้อความครับ — หลายฟีเจอร์ในโปรแกรมนี้มาจากฟีดแบ็คแบบนี้แหละ',
+  fb_type:'ประเภท',
+  fb_t_idea:'อยากได้ฟีเจอร์ / ข้อเสนอแนะ', fb_t_bug:'พบปัญหา / ใช้งานไม่ได้', fb_t_praise:'ชมเชย / กำลังใจ',
+  fb_msg_lb:'ข้อความ', fb_msg_ph:'เล่าได้เต็มที่เลยครับ ยิ่งละเอียดยิ่งช่วยได้ตรงจุด',
+  fb_contact_lb:'ช่องทางติดต่อกลับ (ไม่บังคับ)', fb_contact_ph:'อีเมล / LINE ID — กรอกถ้าอยากให้ตอบกลับ',
+  fb_meta_note:'ระบบแนบข้อมูลการใช้งานไปด้วย (เวอร์ชัน, ภาษา, ตู้ที่เลือก, จำนวนชิ้น) เพื่อช่วยให้แก้ปัญหาได้ตรงจุด',
+  fb_send:'ส่งฟีดแบ็ค', fb_sending:'กำลังส่ง…',
+  fb_ok:'✓ ส่งเรียบร้อย ขอบคุณมากครับ!',
+  fb_err:'ส่งไม่สำเร็จ — ตรวจอินเทอร์เน็ตแล้วลองใหม่ หรือใช้ลิงก์ Google Form ด้านล่าง',
+  fb_need_msg:'กรุณาพิมพ์ข้อความก่อนส่งครับ',
+  fb_wait:'เพิ่งส่งไปเมื่อครู่ — รอสักครู่แล้วส่งได้อีกครั้ง',
+  fb_alt:'หรือส่งผ่าน Google Form แบบเดิม'
 },
 en:{
   title:'Cargo Loader 3D — Container & Truck Loading Planner',
@@ -2026,7 +2160,7 @@ en:{
   s3_nostack:'Do not stack anything on top', s3_add:'＋ Add to list',
   cc_desc:'Free digital tools for SME factories · If this helps you, please follow the channel and send feedback',
   cc_manual:'📖 Manual', cc_fb:'✎ Feedback',
-  pdpa:'This site collects anonymous usage statistics (Google Analytics) to improve the tool · Your cargo data is processed entirely in your browser and never sent anywhere',
+  pdpa:'This site collects anonymous usage statistics (Google Analytics) to improve the tool · Your cargo data is processed entirely in your browser and never sent anywhere · Feedback you submit is stored to improve the tool; the contact field is optional and used only to reply',
   tb_pack:'▶ Pack Cargo', tb_pdf:'⬇ Export Step-by-Step PDF', tb_view:'Reset View',
   tb_tip:'💡 Click = select · Drag = move', tb_step:'Step through',
   btn_calc:'Calculating… {0}%', btn_rest:'⟲ Place leftover ({0})',
@@ -2077,7 +2211,20 @@ en:{
   pdf_legend:'Faded = already loaded in earlier steps · solid = load in this step',
   pdf_page:'Page {0} / {1}',
   pdf_foot:'Created with Cargo Loader 3D · Talk with IE — youtube.com/@_talkwithie.5264',
-  pdf_err:'PDF export failed: '
+  pdf_err:'PDF export failed: ',
+  fb_title:'Send Feedback',
+  fb_sub:'I read every message — many features in this app came from feedback just like this',
+  fb_type:'Type',
+  fb_t_idea:'Feature request / suggestion', fb_t_bug:'Bug / something broke', fb_t_praise:'Praise / encouragement',
+  fb_msg_lb:'Message', fb_msg_ph:'Tell me everything — the more detail, the better I can help',
+  fb_contact_lb:'Contact (optional)', fb_contact_ph:'Email / LINE ID — only if you want a reply',
+  fb_meta_note:'Usage context is attached automatically (version, language, selected container, piece counts) to help diagnose issues',
+  fb_send:'Send Feedback', fb_sending:'Sending…',
+  fb_ok:'✓ Sent — thank you!',
+  fb_err:'Failed to send — check your connection and retry, or use the Google Form link below',
+  fb_need_msg:'Please type a message first',
+  fb_wait:'Just sent one — please wait a moment before sending again',
+  fb_alt:'or send via the classic Google Form'
 }};
 
 function T(key){
@@ -2102,8 +2249,13 @@ function applyLang(){
   if(lb) lb.textContent = (LANG==='th') ? 'EN' : 'ไทย';
 }
 
-var APP_VER = '1.9';
+var APP_VER = '2.0';
 var CHANGELOG = [
+  {ver:'2.0', date:{th:'พ.ย. 2569', en:'Nov 2026'}, items:{
+    th:['ระบบฟีดแบ็คในตัวโปรแกรม — กดส่งได้เลยไม่ต้องเด้งไป Google Form พร้อมแนบข้อมูลเวอร์ชัน/ตู้/จำนวนชิ้นให้อัตโนมัติ ช่วยให้ผู้พัฒนาแก้ปัญหาได้ตรงจุด',
+        'รองรับทั้งสองภาษา และยังมีลิงก์ Google Form แบบเดิมเป็นทางสำรอง'],
+    en:['Built-in feedback — send directly from the app (no more jumping to Google Forms), with version/container/piece-count context attached automatically',
+        'Fully bilingual, with the classic Google Form link kept as a backup']}},
   {ver:'1.9', date:{th:'พ.ย. 2569', en:'Nov 2026'}, items:{
     th:['แสดงชื่อสินค้าบนตัวกล่อง/ถังในภาพ 3 มิติและใน PDF — ไม่ต้องไล่เทียบสีอีกต่อไป',
         'แก้จำนวนชิ้นได้โดยตรงในตารางรายการ แม้กดจัดเรียงไปแล้ว — โปรแกรมคำนวณใหม่ให้อัตโนมัติ'],
@@ -2227,6 +2379,7 @@ window.addEventListener('load', function(){
     track('lang_switch', {to: LANG});
   };
   initChangelog();
+  initFeedback();
   initContainerSel();
   initBoxPresetSel();
   initForm();
