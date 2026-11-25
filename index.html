@@ -262,7 +262,7 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
 <header>
   <img class="logo-img" id="chLogo" alt="โลโก้ช่อง คุยกับไออี">
   <div>
-    <h1>CARGO LOADER <span>3D</span><span class="ver-badge" id="verBadge" title="ดูประวัติการอัปเดต"><span class="ver-dot"></span><span id="verText">v1.0</span></span></h1>
+    <h1>CARGO LOADER <span>3D</span><span class="ver-badge" id="verBadge" title="ดูประวัติการอัปเดต"><span class="ver-dot"></span><span id="verText">v1.0</span></span><span class="ver-badge hidden" id="statsBadge" style="cursor:default" title=""><span id="statsText"></span></span></h1>
     <div class="by" data-i18n="hd_by">โดยช่อง คุยกับไออี · โปรแกรมวางแผนจัดเรียงสินค้าเข้าตู้ / ขึ้นรถบรรทุก</div>
   </div>
   <div class="links">
@@ -453,7 +453,7 @@ aside::-webkit-scrollbar-thumb{background:#31405A; border-radius:5px}
       <h2 data-i18n="fb_title">ส่งฟีดแบ็คถึงผู้พัฒนา</h2>
       <button class="cl-close" id="fbClose" title="ปิด">✕</button>
     </div>
-    <div class="cl-sub" data-i18n="fb_sub">อ่านทุกข้อความ และหลายฟีเจอร์ในโปรแกรมนี้ก็มาจากฟีดแบ็คแบบนี้แหละ</div>
+    <div class="cl-sub" data-i18n="fb_sub">อ่านทุกข้อความ และหลายฟีเจอร์ในโปรแกรมนี้ก็มาจากฟีดแบ็คแบบนี้แหละครับ</div>
     <label for="fbType" data-i18n="fb_type">ประเภท</label>
     <select id="fbType">
       <option value="idea" data-i18n="fb_t_idea">อยากได้ฟีเจอร์ / ข้อเสนอแนะ</option>
@@ -1578,12 +1578,58 @@ function initEditPanel(){
 }
 
 /* ============================================================
+   ตัวนับผู้ใช้ + ออนไลน์ (ผ่าน Google Apps Script ตัวเดียวกับฟีดแบ็ค)
+   วิธีเปิดใช้: deploy ไฟล์ cargo-gas.gs แล้วนำ Web App URL มาวางใน
+   STATS_URL ด้านล่าง (ใช้ URL เดียวกับ FEEDBACK_URL ได้เลย)
+   ปล่อยว่าง = ไม่แสดงป้ายสถิติ โปรแกรมทำงานปกติทุกอย่าง
+   ============================================================ */
+var STATS_URL = 'https://script.google.com/macros/s/AKfycbyuxxlMu84zL3cG0N_FSEpno3fYKYK-nQKVBNgM4K20HoQxj7JBJHTCYNRDo_f16OIH/exec';
+
+var STATS_CID = null;
+try{
+  STATS_CID = localStorage.getItem('cl3d_cid');
+  if(!STATS_CID){
+    STATS_CID = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    localStorage.setItem('cl3d_cid', STATS_CID);
+  }
+}catch(e){ STATS_CID = 'c' + Math.random().toString(36).slice(2, 10); }
+
+/* รับผลจาก GAS แบบ JSONP (เลี่ยงข้อจำกัด CORS ของ script.google.com) */
+window.cl3dStats = function(d){
+  if(!d || typeof d.visits !== 'number') return;
+  var b = $('statsBadge');
+  $('statsText').textContent = T('stats_badge', d.visits.toLocaleString(), d.online);
+  b.title = T('stats_tip');
+  b.classList.remove('hidden');
+};
+
+function statsPing(action){
+  if(!STATS_URL) return;
+  try{
+    var s = document.createElement('script');
+    s.src = STATS_URL + (STATS_URL.indexOf('?')>=0 ? '&' : '?')
+      + 'action=' + action + '&cid=' + encodeURIComponent(STATS_CID)
+      + '&cb=cl3dStats&t=' + Date.now();
+    s.onload = s.onerror = function(){ s.remove(); };
+    document.body.appendChild(s);
+  }catch(e){}
+}
+
+function initStats(){
+  if(!STATS_URL) return;
+  var first = true;
+  try{ first = !sessionStorage.getItem('cl3d_hit'); if(first) sessionStorage.setItem('cl3d_hit','1'); }catch(e){}
+  statsPing(first ? 'hit' : 'beat');          /* นับยอดครั้งละ 1 ต่อ session */
+  setInterval(function(){ statsPing('beat'); }, 240000);   /* heartbeat ทุก 4 นาที */
+}
+
+/* ============================================================
    ระบบฟีดแบ็คในเว็บ → Google Sheet (ผ่าน Google Apps Script)
    วิธีเปิดใช้: deploy สคริปต์ GAS (ไฟล์ feedback-gas.gs) แล้วนำ
    Web App URL มาวางใน FEEDBACK_URL ด้านล่าง
    ถ้าปล่อยว่างไว้ ปุ่มฟีดแบ็คจะเปิด Google Form แบบเดิมโดยอัตโนมัติ
    ============================================================ */
-var FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbyuxxlMu84zL3cG0N_FSEpno3fYKYK-nQKVBNgM4K20HoQxj7JBJHTCYNRDo_f16OIH/exec';   /* ← วาง Web App URL ของคุณที่นี่ เช่น 'https://script.google.com/macros/s/XXXX/exec' */
+var FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbyuxxlMu84zL3cG0N_FSEpno3fYKYK-nQKVBNgM4K20HoQxj7JBJHTCYNRDo_f16OIH/exec';
 
 var _fbLastSent = 0;
 
@@ -2138,7 +2184,9 @@ th:{
   fb_err:'ส่งไม่สำเร็จ — ตรวจอินเทอร์เน็ตแล้วลองใหม่ หรือใช้ลิงก์ Google Form ด้านล่าง',
   fb_need_msg:'กรุณาพิมพ์ข้อความก่อนส่งครับ',
   fb_wait:'เพิ่งส่งไปเมื่อครู่ — รอสักครู่แล้วส่งได้อีกครั้ง',
-  fb_alt:'หรือส่งผ่าน Google Form แบบเดิม'
+  fb_alt:'หรือส่งผ่าน Google Form แบบเดิม',
+  stats_badge:'ผู้ใช้ {0} ครั้ง · ออนไลน์ {1}',
+  stats_tip:'ยอดการใช้งานสะสม และจำนวนคนที่เปิดโปรแกรมอยู่ตอนนี้ (นับแบบไม่ระบุตัวตน)'
 },
 en:{
   title:'Cargo Loader 3D — Container & Truck Loading Planner',
@@ -2224,7 +2272,9 @@ en:{
   fb_err:'Failed to send — check your connection and retry, or use the Google Form link below',
   fb_need_msg:'Please type a message first',
   fb_wait:'Just sent one — please wait a moment before sending again',
-  fb_alt:'or send via the classic Google Form'
+  fb_alt:'or send via the classic Google Form',
+  stats_badge:'{0} visits · {1} online',
+  stats_tip:'Total visits and people using the app right now (counted anonymously)'
 }};
 
 function T(key){
@@ -2249,8 +2299,11 @@ function applyLang(){
   if(lb) lb.textContent = (LANG==='th') ? 'EN' : 'ไทย';
 }
 
-var APP_VER = '2.0';
+var APP_VER = '2.1';
 var CHANGELOG = [
+  {ver:'2.1', date:{th:'พ.ย. 2569', en:'Nov 2026'}, items:{
+    th:['ป้ายสถิติข้างชื่อโปรแกรม: ยอดการใช้งานสะสม และจำนวนคนที่กำลังออนไลน์อยู่ตอนนี้ (นับแบบไม่ระบุตัวตน)'],
+    en:['Live stats badge next to the app title: total visits and how many people are using the app right now (anonymous counting)']}},
   {ver:'2.0', date:{th:'พ.ย. 2569', en:'Nov 2026'}, items:{
     th:['ระบบฟีดแบ็คในตัวโปรแกรม — กดส่งได้เลยไม่ต้องเด้งไป Google Form พร้อมแนบข้อมูลเวอร์ชัน/ตู้/จำนวนชิ้นให้อัตโนมัติ ช่วยให้ผู้พัฒนาแก้ปัญหาได้ตรงจุด',
         'รองรับทั้งสองภาษา และยังมีลิงก์ Google Form แบบเดิมเป็นทางสำรอง'],
@@ -2380,6 +2433,7 @@ window.addEventListener('load', function(){
   };
   initChangelog();
   initFeedback();
+  initStats();
   initContainerSel();
   initBoxPresetSel();
   initForm();
